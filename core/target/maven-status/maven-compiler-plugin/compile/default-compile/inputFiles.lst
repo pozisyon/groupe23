@@ -1,0 +1,12 @@
+/home/brenn/API/arbre32_v2/core/src/main/java/com/arbre32/core/model/Card.java
+/home/brenn/API/arbre32_v2/core/src/main/java/com/arbre32/core/engine/GameState.java
+/home/brenn/API/arbre32_v2/core/src/main/java/com/arbre32/core/engine/PlayingState.java
+/home/brenn/API/arbre32_v2/core/src/main/java/com/arbre32/core/engine/Game.java
+/home/brenn/API/arbre32_v2/core/src/main/java/com/arbre32/core/model/Board.java
+/home/brenn/API/arbre32_v2/core/src/main/java/com/arbre32/core/player/Player.java
+/home/brenn/API/arbre32_v2/core/src/main/java/com/arbre32/core/engine/ScoringService.java
+/home/brenn/API/arbre32_v2/core/src/main/java/com/arbre32/core/engine/RuleEngine.java
+/home/brenn/API/arbre32_v2/core/src/main/java/com/arbre32/core/model/TreeNode.java
+/home/brenn/API/arbre32_v2/core/src/main/java/com/arbre32/core/factory/DeckFactory.java
+/home/brenn/API/arbre32_v2/core/src/main/java/com/arbre32/core/engine/PowerStrategy.java
+/home/brenn/API/arbre32_v2/core/src/main/java/com/arbre32/core/engine/GameContext.java

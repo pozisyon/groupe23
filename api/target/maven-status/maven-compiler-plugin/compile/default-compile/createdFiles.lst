@@ -1,0 +1,4 @@
+com/arbre32/api/service/GameService.class
+com/arbre32/api/Arbre32Application.class
+com/arbre32/api/controller/GameController.class
+com/arbre32/api/dto/GameStateDTO.class

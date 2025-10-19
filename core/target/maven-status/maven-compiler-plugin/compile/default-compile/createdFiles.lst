@@ -1,0 +1,12 @@
+com/arbre32/core/engine/GameContext.class
+com/arbre32/core/factory/DeckFactory.class
+com/arbre32/core/engine/ScoringService.class
+com/arbre32/core/model/TreeNode.class
+com/arbre32/core/engine/Game.class
+com/arbre32/core/engine/PowerStrategy.class
+com/arbre32/core/model/Card.class
+com/arbre32/core/engine/PlayingState.class
+com/arbre32/core/engine/GameState.class
+com/arbre32/core/player/Player.class
+com/arbre32/core/model/Board.class
+com/arbre32/core/engine/RuleEngine.class
