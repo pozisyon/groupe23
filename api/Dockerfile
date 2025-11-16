@@ -1,9 +1,19 @@
-FROM eclipse-temurin:17-jdk AS build
-WORKDIR /app
+# Étape 1 : build complet Maven
+FROM maven:3.9.9-eclipse-temurin-17 AS build
+WORKDIR /build
+
+# Copie de tout le projet (parent, core, api, etc.)
 COPY . .
-RUN ./mvnw -q -DskipTests clean package || mvn -q -DskipTests clean package
-FROM eclipse-temurin:17-jre
+
+# Compilation à partir du pom parent à la racine
+RUN mvn -f pom.xml clean package -DskipTests
+
+# Étape 2 : image d’exécution légère
+FROM eclipse-temurin:17-jdk
 WORKDIR /app
-COPY target/*.jar app.jar
+
+# Copie du jar API uniquement
+COPY --from=build /build/api/target/*.jar app.jar
+
 EXPOSE 8080
-ENTRYPOINT ["java","-jar","/app/app.jar"]
+CMD ["java", "-jar", "app.jar"]

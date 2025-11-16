@@ -1,0 +1,7 @@
+ALTER TABLE player_account
+  ADD COLUMN email VARCHAR(190) UNIQUE,
+  ADD COLUMN password_hash VARCHAR(255),
+  ADD COLUMN role VARCHAR(30) NOT NULL DEFAULT 'USER',
+  ADD COLUMN status VARCHAR(30) NOT NULL DEFAULT 'ACTIVE';
+
+CREATE INDEX IF NOT EXISTS idx_player_email ON player_account(email);

@@ -1,0 +1,1 @@
+package com.arbre32.api.game.dto; public class PlayRequest { public String cardId; }

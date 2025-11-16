@@ -1,17 +1,22 @@
+server:
+  port: 8080
+
 spring:
   datasource:
-    driver-class-name: org.postgresql.Driver
     url: jdbc:postgresql://localhost:5432/arbre32
-    username: arbre
-    password: arbre
-
+    username: postgres
+    password: 1221Studi@
   jpa:
     hibernate:
       ddl-auto: update
-    show-sql: true
     properties:
-      hibernate:
-        dialect: org.hibernate.dialect.PostgreSQLDialect
+      hibernate.format_sql: true
+      hibernate.jdbc.lob.non_contextual_creation: true
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
 
-server:
-  port: 8080
+security:
+  jwt:
+    secret: "THIS_IS_A_DEV_SECRET_CHANGE_IT_IN_PRODUCTION_1234567890"
+    expMinutes: 120

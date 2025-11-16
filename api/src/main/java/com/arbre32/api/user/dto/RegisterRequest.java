@@ -1,0 +1,1 @@
+package com.arbre32.api.user.dto; public record RegisterRequest(String handle,String email,String password){}

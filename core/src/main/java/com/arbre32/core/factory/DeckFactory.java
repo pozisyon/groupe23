@@ -1,33 +1,34 @@
 package com.arbre32.core.factory;
-import com.arbre32.core.model.Card;
-import com.arbre32.core.engine.PowerStrategy;
-import java.util.*;
-public class DeckFactory {
-    public static List<Card> createDeck(int size){
+
+import com.arbre32.core.model.*;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
+public final class DeckFactory {
+    private DeckFactory(){}
+
+    public static List<Card> build32(){
         List<Card> deck = new ArrayList<>();
-        String[] suits = {"♣","♦","♥","♠"};
-        String[] ranks32 = {"7","8","9","10","J","Q","K","A"};
-        String[] ranks52 = {"2","3","4","5","6","7","8","9","10","J","Q","K","A"};
-        String[] ranks = size==32 ? ranks32 : ranks52;
-        for(String s : suits){
-            for(String r : ranks){
-                int value = mapValue(r);
-                PowerStrategy power = null;
-                deck.add(new Card(r, s, value, power));
+        Rank[] ranks = { Rank.ACE, Rank.KING, Rank.QUEEN, Rank.JACK, Rank.TEN, Rank.NINE, Rank.EIGHT, Rank.SEVEN };
+        for (Suit s : Suit.values()){
+            for (Rank r : ranks){
+                deck.add(new Card(r, s));
             }
         }
-        Collections.shuffle(deck, new Random(42));
-        return deck.subList(0, Math.min(size, deck.size()));
+        Collections.shuffle(deck);
+        return deck;
     }
-    private static int mapValue(String r){
-        return switch(r){
-            case "A" -> 11;
-            case "K" -> 4;
-            case "Q" -> 3;
-            case "J" -> 2;
-            default -> {
-                try{ yield Integer.parseInt(r); } catch(Exception e){ yield 0; }
+
+    public static List<Card> build52(){
+        List<Card> deck = new ArrayList<>();
+        for (Suit s : Suit.values()){
+            for (Rank r : Rank.values()){
+                deck.add(new Card(r, s));
             }
-        };
+        }
+        Collections.shuffle(deck);
+        return deck;
     }
 }

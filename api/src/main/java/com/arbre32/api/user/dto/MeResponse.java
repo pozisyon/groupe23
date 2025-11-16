@@ -1,0 +1,1 @@
+package com.arbre32.api.user.dto; import java.util.UUID; public record MeResponse(UUID id,String handle,String email,String role){}
