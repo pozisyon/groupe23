@@ -1,34 +1,140 @@
-import { useEffect, useState } from "react";
-import { listOpenGames } from "../api/gameApi";
-import { useGame } from "../context/GameContext";
+import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { GameApi } from "../api/gameApi";
+import { useGameStore, GameSummary } from "../store/gameStore";
+import { LoadingSpinner } from "../components/common/LoadingSpinner";
 
-export default function LobbyPage() {
-  const [rooms, setRooms] = useState<{ id: string; players: string[]; createdAt: string }[]>([]);
-  const { initNewGame, loadGame } = useGame();
+export const LobbyPage: React.FC = () => {
+  const navigate = useNavigate();
+  const games = useGameStore((s) => s.games);
+  const setGames = useGameStore((s) => s.setGames);
+
+  const [loading, setLoading] = useState(false);
+
+  const fetchGames = async () => {
+    setLoading(true);
+    try {
+      const list = await GameApi.listGames();
+      setGames(list);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    listOpenGames().then(setRooms).catch(() => setRooms([]));
+    fetchGames();
   }, []);
 
-  return (
-    <div className="p-4 space-y-3">
-      <div className="flex gap-2">
-        <button className="px-3 py-2 rounded bg-blue-600 text-white text-sm" onClick={() => initNewGame(["J1","J2"], "32")}>Nouvelle partie (32)</button>
-        <button className="px-3 py-2 rounded bg-indigo-600 text-white text-sm" onClick={() => initNewGame(["J1","J2"], "52")}>Nouvelle partie (52)</button>
-      </div>
+  const handleCreateGame = async () => {
+    try {
+      const game = await GameApi.createGame();
+      navigate(`/game/${game.id}`);
+    } catch (e) {
+      console.error(e);
+      alert("Erreur lors de la création de la partie.");
+    }
+  };
 
-      <div className="border rounded bg-white">
-        <div className="p-2 text-sm font-medium border-b">Parties ouvertes</div>
-        <div className="divide-y">
-          {rooms.map(r => (
-            <div key={r.id} className="p-2 text-sm flex items-center justify-between">
-              <div>#{r.id} • {r.players.join(" vs ")}</div>
-              <button className="px-2 py-1 rounded border" onClick={() => loadGame(r.id)}>Rejoindre</button>
+  const handleJoin = async (game: GameSummary) => {
+    try {
+      const joined = await GameApi.joinGame(game.id);
+      navigate(`/game/${joined.id}`);
+    } catch (e) {
+      console.error(e);
+      alert("Impossible de rejoindre cette partie.");
+    }
+  };
+
+  const statusLabel = (status: GameSummary["status"]) => {
+    switch (status) {
+      case "WAITING":
+        return "En attente";
+      case "IN_PROGRESS":
+        return "En cours";
+      case "FINISHED":
+        return "Terminée";
+    }
+  };
+
+  return (
+    <div>
+      <h1 className="page-title">Lobby des parties</h1>
+      <p className="page-description">
+        Crée une nouvelle partie d&apos;Arbre32 ou rejoins une partie existante. Tout est synchronisé avec le backend Spring Boot.
+      </p>
+
+      <div className="lobby-grid">
+        <div className="card">
+          <div className="card-header">
+            <div>
+              <div className="card-title">Parties disponibles</div>
+              <div className="card-subtitle">
+                {games.length === 0 ? "Aucune partie pour le moment." : `${games.length} partie(s) trouvée(s).`}
+              </div>
             </div>
-          ))}
-          {rooms.length === 0 && <div className="p-2 text-sm text-gray-500">Aucune salle pour le moment.</div>}
+            <button className="btn secondary" onClick={fetchGames} disabled={loading}>
+              Rafraîchir
+            </button>
+          </div>
+
+          {loading && <LoadingSpinner />}
+
+          <div className="lobby-list">
+            {games.map((g) => (
+              <div key={g.id} className="lobby-item">
+                <div className="lobby-item-main">
+                  <div className="lobby-item-title">
+                    <span className={`status-dot ${g.status.toLowerCase()}`}></span>
+                    Partie #{g.id}
+                  </div>
+                  <div className="lobby-item-meta">
+                    <span className={`badge ${g.status.toLowerCase()}`}>{statusLabel(g.status)}</span>{" "}
+                    <span style={{ marginLeft: "0.4rem" }}>
+                      Joueurs : {g.players && g.players.length > 0 ? g.players.join(", ") : "aucun pour l'instant"}
+                    </span>
+                  </div>
+                </div>
+                <div className="lobby-actions">
+                  <button
+                    className="btn"
+                    onClick={() => handleJoin(g)}
+                    disabled={g.status === "FINISHED"}
+                  >
+                    Rejoindre
+                  </button>
+                  <span className="text-muted">Statut temps réel via WebSocket en jeu</span>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {games.length === 0 && !loading && (
+            <div className="text-center mt-md text-muted">
+              Crée la première partie pour commencer à jouer.
+            </div>
+          )}
+        </div>
+
+        <div className="card">
+          <div className="card-header">
+            <div>
+              <div className="card-title">Créer une partie</div>
+              <div className="card-subtitle">Lance une nouvelle session Arbre32</div>
+            </div>
+          </div>
+          <p className="text-muted">
+            Une nouvelle partie sera créée côté backend, et tu seras automatiquement redirigé vers le plateau.
+          </p>
+          <button className="btn mt-md" onClick={handleCreateGame}>
+            Créer une nouvelle partie
+          </button>
+          <p className="mt-md text-muted">
+            Tous les états de jeu (cartes, tours, scores) seront gérés par le backend Spring Boot et diffusés en temps réel via WebSocket.
+          </p>
         </div>
       </div>
     </div>
   );
-}
+};

@@ -8,6 +8,8 @@
 /home/brenn/API/arbre32_v2/api/src/main/java/com/arbre32/api/game/dto/GameStateDTO.java
 /home/brenn/API/arbre32_v2/api/src/main/java/com/arbre32/api/game/dto/CreateGameRequest.java
 /home/brenn/API/arbre32_v2/api/src/main/java/com/arbre32/api/security/SecurityConfig.java
+/home/brenn/API/arbre32_v2/api/src/main/java/com/arbre32/api/user/dto/JoinRequest.java
+/home/brenn/API/arbre32_v2/api/src/main/java/com/arbre32/api/config/CorsConfig.java
 /home/brenn/API/arbre32_v2/api/src/main/java/com/arbre32/api/game/GameController.java
 /home/brenn/API/arbre32_v2/api/src/main/java/com/arbre32/api/user/dto/LoginRequest.java
 /home/brenn/API/arbre32_v2/api/src/main/java/com/arbre32/api/websocket/WebSocketConfig.java
@@ -18,4 +20,5 @@
 /home/brenn/API/arbre32_v2/api/src/main/java/com/arbre32/api/game/dto/PlayRequest.java
 /home/brenn/API/arbre32_v2/api/src/main/java/com/arbre32/api/user/dto/MeResponse.java
 /home/brenn/API/arbre32_v2/api/src/main/java/com/arbre32/api/user/PlayerAccountRepository.java
+/home/brenn/API/arbre32_v2/api/src/main/java/com/arbre32/api/user/dto/UserDto.java
 /home/brenn/API/arbre32_v2/api/src/main/java/com/arbre32/api/chat/ChatMessage.java

@@ -1,22 +1,28 @@
-import { api } from "./apiClient";
-import { GameStateDTO, PlayRequestDTO } from "../dto/game";
+import api from "./http";
+import { GameSummary, GameState } from "../store/gameStore";
 
-export async function createGame(players: string[] = ["P1", "P2"], mode: "32" | "52" = "32") {
-  const res = await api.post<{ gameId: string }>("/api/game/create", { players, mode });
-  return res.data; // { gameId }
-}
+export const GameApi = {
+  async listGames(): Promise<GameSummary[]> {
+    const res = await api.get<GameSummary[]>("/api/games");
+    return res.data;
+  },
 
-export async function getGameState(gameId: string) {
-  const res = await api.get<GameStateDTO>(`/api/game/${gameId}/state`);
-  return res.data;
-}
+  async createGame(): Promise<GameState> {
+    const res = await api.post<GameState>("/api/games");
+    return res.data;
+  },
 
-export async function playCard(gameId: string, payload: PlayRequestDTO) {
-  const res = await api.post<GameStateDTO>(`/api/game/${gameId}/play`, payload);
-  return res.data;
-}
+  async joinGame(id: string): Promise<GameState> {
+    const res = await api.post<GameState>(`/api/games/${id}/join`);
+    return res.data;
+  },
 
-export async function listOpenGames() {
-  const res = await api.get<{ id: string; players: string[]; createdAt: string }[]>(`/api/lobby/open`);
-  return res.data;
-}
+  async getGame(id: string): Promise<GameState> {
+    const res = await api.get<GameState>(`/api/games/${id}`);
+    return res.data;
+  },
+
+  async playMove(id: string, payload: unknown): Promise<void> {
+    await api.post(`/api/games/${id}/move`, payload);
+  },
+};

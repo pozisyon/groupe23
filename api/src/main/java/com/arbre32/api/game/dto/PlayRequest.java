@@ -1,1 +1,3 @@
-package com.arbre32.api.game.dto; public class PlayRequest { public String cardId; }
+package com.arbre32.api.game.dto;
+
+public record PlayRequest(String cardId, String playerId) {}

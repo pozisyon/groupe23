@@ -10,6 +10,10 @@ public class GameStateDTO {
     public boolean rootLocked;
     public int maxDepth;
 
+    // 🔥 nouveaux champs
+    public String humanP1;
+    public String humanP2;
+
     public Score score;
     public List<List<CardDTO>> board;
 
@@ -25,6 +29,6 @@ public class GameStateDTO {
         public boolean power;
         public boolean playable;
         public int depth;
-        public Boolean locked;
+        public boolean locked;
     }
 }

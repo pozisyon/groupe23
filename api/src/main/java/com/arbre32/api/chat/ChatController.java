@@ -8,7 +8,6 @@ import org.springframework.web.bind.annotation.*;
 import java.util.Map;
 
 @RestController @RequestMapping("/api/chat")
-@CrossOrigin(origins="http://localhost:5173", allowCredentials="true")
 public class ChatController {
 
     private final SimpMessagingTemplate messagingTemplate;

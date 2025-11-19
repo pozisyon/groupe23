@@ -1,21 +1,14 @@
-// main.tsx
-import "./polyfills/global";
+
 import React from "react";
 import ReactDOM from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
-import { App } from './ui/App';
-import "./index.css";
-import { GameProvider } from "./context/GameContext";
-import { ChatProvider } from "./context/ChatContext";
+import App from "./App";
+import "./styles.css";
 
-ReactDOM.createRoot(document.getElementById("root")!).render(
+ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
   <React.StrictMode>
     <BrowserRouter>
-      <GameProvider>
-        <ChatProvider>
-          <App />
-        </ChatProvider>
-      </GameProvider>
+      <App />
     </BrowserRouter>
   </React.StrictMode>
 );
