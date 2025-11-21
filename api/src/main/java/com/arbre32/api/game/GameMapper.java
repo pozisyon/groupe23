@@ -1,9 +1,11 @@
+// src/main/java/com/arbre32/api/game/GameMapper.java
 package com.arbre32.api.game;
 
 import com.arbre32.api.game.dto.GameStateDTO;
 import com.arbre32.core.engine.GameEngine;
 import com.arbre32.core.engine.GameState;
 import com.arbre32.core.model.Card;
+import com.arbre32.core.model.Player;
 import com.arbre32.core.tree.TreeNode;
 
 import java.util.*;
@@ -13,23 +15,24 @@ public class GameMapper {
     public static GameStateDTO toDto(GameState st, GameEngine engine) {
         GameStateDTO dto = new GameStateDTO();
 
-        dto.gameId     = st.id();
-        dto.turnPlayer = st.turnPlayerId();
-        dto.turnIndex  = st.turnIndex();
-        dto.rootLocked = st.rootLocked();
-        dto.maxDepth   = st.maxDepth();
+        dto.gameId      = st.id();
+        dto.rootLocked  = st.rootLocked();
+        dto.turnIndex   = st.turnIndex();
+        dto.maxDepth    = st.maxDepth();
+        dto.currentPlayer = st.currentPlayer();
 
-        // 🔥 mapping des joueurs humains
-        dto.humanP1 = st.humanP1();
-        dto.humanP2 = st.humanP2();
+        // --- joueurs dynamiques ---
+        List<GameStateDTO.PlayerDTO> players = new ArrayList<>();
+        for (Player p : st.allPlayers()) {
+            GameStateDTO.PlayerDTO pd = new GameStateDTO.PlayerDTO();
+            pd.id    = p.id();   // == handle
+            pd.name  = p.name();
+            pd.score = p.score();
+            players.add(pd);
+        }
+        dto.players = players;
 
-
-        // --- SCORE ---
-        dto.score = new GameStateDTO.Score();
-        dto.score.player1 = st.p1().score();
-        dto.score.player2 = st.p2().score();
-
-        // --- BOARD groupé par profondeur ---
+        // --- plateau groupé par profondeur ---
         Map<Integer, List<TreeNode<Card>>> grouped = new TreeMap<>();
 
         for (TreeNode<Card> n : st.tree().nodesBreadth()) {
@@ -53,18 +56,13 @@ public class GameMapper {
                 cd.depth = n.depth();
 
                 boolean childrenCollected = !n.children().isEmpty();
-
-                // 🔥 source unique de vérité
                 boolean playable = engine.isPlayable(st, n, childrenCollected);
 
                 cd.playable = playable;
                 cd.locked   = computeLocked(n, st, playable);
 
                 row.add(cd);
-                System.out.println("CARD " + cd.id + " playable=" + cd.playable + " locked=" + cd.locked);
-
             }
-
 
             dto.board.add(row);
         }
@@ -73,11 +71,9 @@ public class GameMapper {
     }
 
     private static boolean computeLocked(TreeNode<Card> node, GameState st, boolean playable) {
-        // racine verrouillée tant que rootLocked = true
         if (node.depth() == 0 && st.rootLocked()) {
             return true;
         }
-        // le reste : locked = !playable
         return !playable;
     }
 }

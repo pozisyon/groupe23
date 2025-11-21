@@ -3,7 +3,9 @@ package com.arbre32.api.game;
 import com.arbre32.api.game.dto.GameStateDTO;
 import com.arbre32.core.engine.GameEngine;
 import com.arbre32.core.engine.GameState;
+import com.arbre32.core.model.Card;
 import com.arbre32.core.model.Move;
+import com.arbre32.core.tree.TreeNode;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
@@ -21,77 +23,122 @@ public class GameService {
         this.broker = broker;
     }
 
-    // CREATE A GAME
-    public String create(int mode) {
+    // ---------- CRÉER UNE PARTIE ----------
+    public GameStateDTO createGame(int mode) {
         GameState st = engine.startNewGame(mode == 32);
         games.put(st.id(), st);
-        return st.id();
+        return GameMapper.toDto(st, engine);
     }
 
-    // GET STATE
-    public GameStateDTO state(String id) {
+    // ---------- ÉTAT ----------
+    public GameStateDTO getState(String id) {
         GameState st = games.get(id);
         return (st == null) ? null : GameMapper.toDto(st, engine);
     }
 
-    // JOIN GAME (CORRIGÉ)
-    public GameStateDTO join(String id, String playerHandle) {
-        System.out.println("\n\n--- METHODE JOIN ---\n");
-
+    // ---------- REJOINDRE ----------
+    public GameStateDTO joinGame(String id, String userHandle) {
         GameState st = games.get(id);
         if (st == null) return null;
 
-        if (st.humanP1() == null) {
-            st.setHumanP1("J1");
-            st.setTurnPlayer("J1");
-        } else if (st.humanP2() == null) {
-            st.setHumanP2("J2");
+        boolean added = st.addPlayer(userHandle);
+
+        // assigner le premier joueur au tour
+        if (added && st.allPlayers().size() == 1) {
+            // premier joueur dans la partie
+            // currentPlayerIndex = 0 AUTOMATIQUEMENT
+        }
+
+        // si deux joueurs ou plus : on débloque la racine
+        if (st.allPlayers().size() >= 2) {
             st.setRootLocked(false);
         }
 
         GameStateDTO dto = GameMapper.toDto(st, engine);
         broker.convertAndSend("/topic/game/" + id, dto);
-
         return dto;
     }
 
-    // PLAY (CORRIGÉ)
-    public record PlayResult(int status, String message, GameStateDTO state) {}
 
-    public PlayResult play(String id, String cardId, String playerId) {
+    // ---------- RÉSULTAT DE PLAY ----------
+    // ---------- RÉSULTAT DE PLAY ----------
+    public record PlayResult(
+            int status,
+            String message,
+            GameStateDTO state,
+            String playedCard,
+            List<String> takenCards
+    ) { }
+
+
+    // ---------- JOUER UN COUP ----------
+    public PlayResult play(String id, String cardId, String userHandle) {
 
         GameState st = games.get(id);
-        if (st == null)
-            return new PlayResult(404, "Game not found", null);
-
-        // Vérification : c'est bien à ce joueur de jouer
-
-        if (!st.turnPlayerId().equals(playerId)) {
-            return new PlayResult(403, "Not your turn", null);
+        if (st == null) {
+            return new PlayResult(404, "Game not found", null, null, List.of());
         }
 
-        var node = st.findById(cardId).orElse(null);
-        if (node == null)
-            return new PlayResult(404, "Card not found", null);
+        // doit être son tour
+        String current = st.currentPlayer();
+        if (current == null || !current.equals(userHandle)) {
+            return new PlayResult(403, "Not your turn", null, null, List.of());
+        }
 
+        Optional<TreeNode<Card>> nodeOpt = st.findById(cardId);
+        if (nodeOpt.isEmpty()) {
+            return new PlayResult(404, "Card not found", null, null, List.of());
+        }
+
+        TreeNode<Card> node = nodeOpt.get();
         boolean childrenCollected = !node.children().isEmpty();
-        if (!engine.isPlayable(st, node, childrenCollected))
-            return new PlayResult(409, "Illegal move", null);
+
+        if (!engine.isPlayable(st, node, childrenCollected)) {
+            return new PlayResult(409, "Illegal move", null, null, List.of());
+        }
+
+        // 📌 Stocker la carte jouée sous forme lisible
+        String played = node.value().toString(); // ex "J♠"
+
+        // Avant le move → détecter les cartes qui seront ramassées
+        List<String> taken = new ArrayList<>();
+        if (childrenCollected) {
+            for (TreeNode<Card> c : node.children()) {
+                taken.add(c.value().toString());
+            }
+        }
 
         // Appliquer le coup
-        engine.applyMove(st, new Move(playerId, cardId));
+        engine.applyMove(st, new Move(userHandle, cardId));
 
+        // DTO final
         GameStateDTO dto = GameMapper.toDto(st, engine);
         broker.convertAndSend("/topic/game/" + id, dto);
 
-        return new PlayResult(200, null, dto);
+        return new PlayResult(200, null, dto, played, taken);
     }
 
-    public List<Map<String,Object>> openGames() {
-        List<Map<String,Object>> out = new ArrayList<>();
-        for (String id : games.keySet()) {
-            out.add(Map.of("id", id));
+    // ---------- PARTIES OUVERTES POUR LE LOBBY ----------
+    public List<Map<String, Object>> openGames() {
+        List<Map<String, Object>> out = new ArrayList<>();
+
+        for (GameState st : games.values()) {
+            Map<String, Object> g = new HashMap<>();
+            g.put("id", st.id());
+
+            int p = st.allPlayers().size();
+            g.put("players", p);
+
+            if (p < 2)
+                g.put("status", "WAITING");
+            else if (st.turnIndex() == 0)
+                g.put("status", "READY");
+            else
+                g.put("status", "IN_PROGRESS");
+
+            out.add(g);
         }
         return out;
     }
+
 }

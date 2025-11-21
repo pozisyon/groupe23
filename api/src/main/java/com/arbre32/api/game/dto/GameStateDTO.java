@@ -1,3 +1,4 @@
+// src/main/java/com/arbre32/api/game/dto/GameStateDTO.java
 package com.arbre32.api.game.dto;
 
 import java.util.List;
@@ -5,21 +6,23 @@ import java.util.List;
 public class GameStateDTO {
 
     public String gameId;
-    public String turnPlayer;
-    public int turnIndex;
     public boolean rootLocked;
+    public int turnIndex;
     public int maxDepth;
 
-    // 🔥 nouveaux champs
-    public String humanP1;
-    public String humanP2;
+    // 🔥 pour savoir à qui est le tour
+    public String currentPlayer;
 
-    public Score score;
+    // 🔥 liste des joueurs dynamiques
+    public List<PlayerDTO> players;
+
+    // plateau
     public List<List<CardDTO>> board;
 
-    public static class Score {
-        public int player1;
-        public int player2;
+    public static class PlayerDTO {
+        public String id;    // == handle
+        public String name;
+        public int score;
     }
 
     public static class CardDTO {
@@ -27,8 +30,8 @@ public class GameStateDTO {
         public String value;
         public String suit;
         public boolean power;
-        public boolean playable;
         public int depth;
+        public boolean playable;
         public boolean locked;
     }
 }
