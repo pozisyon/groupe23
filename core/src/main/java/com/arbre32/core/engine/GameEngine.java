@@ -150,67 +150,101 @@ public class GameEngine {
     /**
      * Applique un coup pour un joueur dynamique.
      */
-    public void applyMove(GameState st, Move move) {
-        // le joueur doit exister
+    /**
+     * Applique un coup pour un joueur dynamique et retourne le résultat du coup.
+     */
+    public MoveResult applyMove(GameState st, Move move) {
+
         Player player = st.getPlayer(move.playerId());
         if (player == null) {
-            // joueur inconnu -> on ne fait rien, mais on pourrait logguer
-            return;
+            return new MoveResult(null, List.of(), 0);
         }
 
         TreeNode<Card> node = st.findById(move.cardId()).orElse(null);
         if (node == null) {
-            // Carte introuvable : on passe juste le tour
             st.advanceTurn();
             st.incrementTurnIndex();
-            return;
+            return new MoveResult(null, List.of(), 0);
         }
 
         boolean childrenCollectedThisTurn = !node.children().isEmpty();
 
-        // Vérification principale des règles
         if (!isPlayable(st, node, childrenCollectedThisTurn)) {
-            // Coup illégal : on passe le tour
             st.advanceTurn();
             st.incrementTurnIndex();
-            return;
+            return new MoveResult(null, List.of(), 0);
         }
 
+        // ----------- COLLECTER LES CARTES -------------
         List<Card> gained;
 
-        // Cas spécial : carte à pouvoir
         if (node.value().isPower()) {
+
             if (childrenCollectedThisTurn) {
-                // Premier passage : on ramasse les enfants uniquement
+                // Premier passage : enfants uniquement
                 List<Card> childrenCards = new ArrayList<>();
                 for (TreeNode<Card> child : new ArrayList<>(node.children())) {
                     childrenCards.addAll(collectSubtree(child));
                     removeSubtree(st, child);
                 }
                 gained = childrenCards;
+
             } else {
-                // Deuxième passage : on ramasse la carte elle-même
+                // Deuxième passage : carte elle-même
                 gained = List.of(node.value());
                 removeSubtree(st, node);
             }
+
         } else {
-            // Carte normale : on ramasse tout le sous-arbre
+            // Carte normale → sous-arbre complet
             gained = collectSubtree(node);
             removeSubtree(st, node);
         }
 
-        // Calcul des points
+        // ----------- POINTS -------------
         int pts = scoring.scoreForCards(gained);
         if (node == st.tree().root()) {
             pts += scoring.rootBonus();
         }
 
-        // Attribution au joueur courant
+        // ----------- ATTRIBUTION -------------
         player.addCards(gained);
         player.addScore(pts);
 
-        // Changement de joueur + incrément de tour
+        // ----------- CHANGEMENT DE JOUEUR -------------
         st.advanceTurn();
         st.incrementTurnIndex();
+
+        // ----------- Retour du résultat -------------
+        return new MoveResult(
+                node.value(),   // carte jouée
+                gained,         // toutes les cartes ramassées
+                pts             // points gagnés
+        );
     }
+
+    public static class MoveResult {
+        public final Card playedCard;
+        public final List<Card> takenCards;
+        public final int pointsGained;
+
+        public MoveResult(Card played, List<Card> taken, int points) {
+            this.playedCard = played;
+            this.takenCards = taken;
+            this.pointsGained = points;
+        }
+
+        public Card getPlayedCard() {
+            return playedCard;
+        }
+
+        public List<Card> getTakenCards() {
+            return takenCards;
+        }
+
+        public int getPointsGained() {
+            return pointsGained;
+        }
+    }
+
 }

@@ -3,6 +3,7 @@ com/arbre32/core/engine/GameEngine.class
 com/arbre32/core/power/PowerType$1.class
 com/arbre32/core/model/Rank.class
 com/arbre32/core/scoring/ScoringService.class
+com/arbre32/core/engine/GameEngine$MoveResult.class
 com/arbre32/core/power/DefaultPowerStrategy.class
 com/arbre32/core/rules/RuleEngine.class
 com/arbre32/core/engine/GameState.class

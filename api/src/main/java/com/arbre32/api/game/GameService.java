@@ -43,13 +43,12 @@ public class GameService {
 
         boolean added = st.addPlayer(userHandle);
 
-        // assigner le premier joueur au tour
+        // Premier joueur : index 0 déjà
         if (added && st.allPlayers().size() == 1) {
-            // premier joueur dans la partie
-            // currentPlayerIndex = 0 AUTOMATIQUEMENT
+            // rien de spécial à faire, currentPlayerIndex = 0 par défaut
         }
 
-        // si deux joueurs ou plus : on débloque la racine
+        // Deux joueurs ou plus → on débloque la racine
         if (st.allPlayers().size() >= 2) {
             st.setRootLocked(false);
         }
@@ -59,63 +58,75 @@ public class GameService {
         return dto;
     }
 
-
     // ---------- RÉSULTAT DE PLAY ----------
-    // ---------- RÉSULTAT DE PLAY ----------
-    public record PlayResult(
-            int status,
-            String message,
-            GameStateDTO state,
-            String playedCard,
-            List<String> takenCards
-    ) { }
-
+    public record PlayResult(int status, String message, GameStateDTO state) { }
 
     // ---------- JOUER UN COUP ----------
     public PlayResult play(String id, String cardId, String userHandle) {
 
         GameState st = games.get(id);
         if (st == null) {
-            return new PlayResult(404, "Game not found", null, null, List.of());
+            return new PlayResult(404, "Game not found", null);
         }
 
         // doit être son tour
         String current = st.currentPlayer();
         if (current == null || !current.equals(userHandle)) {
-            return new PlayResult(403, "Not your turn", null, null, List.of());
+            return new PlayResult(403, "Not your turn", null);
         }
 
         Optional<TreeNode<Card>> nodeOpt = st.findById(cardId);
         if (nodeOpt.isEmpty()) {
-            return new PlayResult(404, "Card not found", null, null, List.of());
+            return new PlayResult(404, "Card not found", null);
         }
 
         TreeNode<Card> node = nodeOpt.get();
         boolean childrenCollected = !node.children().isEmpty();
 
         if (!engine.isPlayable(st, node, childrenCollected)) {
-            return new PlayResult(409, "Illegal move", null, null, List.of());
+            return new PlayResult(409, "Illegal move", null);
         }
 
-        // 📌 Stocker la carte jouée sous forme lisible
-        String played = node.value().toString(); // ex "J♠"
+        // 👉 Appliquer le coup AVEC retour détaillé
+        GameEngine.MoveResult result = engine.applyMove(st, new Move(userHandle, cardId));
 
-        // Avant le move → détecter les cartes qui seront ramassées
-        List<String> taken = new ArrayList<>();
-        if (childrenCollected) {
-            for (TreeNode<Card> c : node.children()) {
-                taken.add(c.value().toString());
-            }
-        }
-
-        // Appliquer le coup
-        engine.applyMove(st, new Move(userHandle, cardId));
-
-        // DTO final
+        // DTO de la nouvelle game state
         GameStateDTO dto = GameMapper.toDto(st, engine);
         broker.convertAndSend("/topic/game/" + id, dto);
 
-        return new PlayResult(200, null, dto, played, taken);
+        // 👉 Construire le message de chat SI un vrai coup a été joué
+        if (result.getPlayedCard() != null) {
+            String playedLabel = result.getPlayedCard().toString(); // ex: "Q♠"
+
+            List<String> takenLabels = result.getTakenCards()
+                    .stream()
+                    .map(Card::toString)  // ex: "8♦", "10♦", ...
+                    .toList();
+
+            String takenPart;
+            if (takenLabels.isEmpty()) {
+                takenPart = "n'a ramassé aucune carte.";
+            } else {
+                takenPart = "a ramassé " + takenLabels.size()
+                        + " carte(s) : " + String.join(", ", takenLabels) + ".";
+            }
+
+            String pointsPart = " Points gagnés sur ce coup : "
+                    + result.getPointsGained() + ".";
+
+            String content = userHandle + " a joué " + playedLabel + " et " + takenPart + pointsPart;
+
+            // Envoi sur /topic/chat/{gameId}
+            broker.convertAndSend(
+                    "/topic/chat/" + id,
+                    Map.of(
+                            "sender", "SYSTEM",
+                            "content", content
+                    )
+            );
+        }
+
+        return new PlayResult(200, null, dto);
     }
 
     // ---------- PARTIES OUVERTES POUR LE LOBBY ----------
@@ -140,5 +151,4 @@ public class GameService {
         }
         return out;
     }
-
 }
