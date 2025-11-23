@@ -1,11 +1,19 @@
-FROM node:18-alpine AS build
+# Build
+FROM node:20 AS builder
 WORKDIR /app
-COPY package.json package-lock.json* yarn.lock* pnpm-lock.yaml* ./
-RUN npm install || true
+
+COPY package*.json ./
+RUN npm install
+
 COPY . .
 RUN npm run build
-FROM node:18-alpine
-WORKDIR /app
-COPY --from=build /app /app
-EXPOSE 5173
-CMD ["npm","run","preview","--","--host","0.0.0.0","--port","5173"]
+
+# Nginx Runtime
+FROM nginx:alpine
+WORKDIR /usr/share/nginx/html
+
+COPY --from=builder /app/dist ./
+
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+
+EXPOSE 80

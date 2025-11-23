@@ -1,0 +1,1 @@
+package com.arbre32.api.chat; public record ChatMessage(String from, String message, long ts) {}

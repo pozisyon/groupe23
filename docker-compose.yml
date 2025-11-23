@@ -1,0 +1,37 @@
+version: "3.9"
+
+services:
+  database:
+    image: postgres:15
+    restart: always
+    environment:
+      POSTGRES_DB: arbre32
+      POSTGRES_USER: arbre_user
+      POSTGRES_PASSWORD: arbre_pass
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  backend:
+    build: ./api
+    restart: always
+    depends_on:
+      - database
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://database:5432/arbre32
+      SPRING_DATASOURCE_USERNAME: arbre_user
+      SPRING_DATASOURCE_PASSWORD: arbre_pass
+    ports:
+      - "8080:8080"
+
+  frontend:
+    build: ./frontend
+    restart: always
+    depends_on:
+      - backend
+    ports:
+      - "80:80"
+
+volumes:
+  db_data:

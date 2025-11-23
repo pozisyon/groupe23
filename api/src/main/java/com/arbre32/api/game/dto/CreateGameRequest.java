@@ -1,0 +1,1 @@
+package com.arbre32.api.game.dto; import java.util.*; public class CreateGameRequest { public List<String> players; public int mode; }
