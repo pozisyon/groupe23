@@ -3,7 +3,7 @@ name: CI/CD Arbre32
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "master" ]
 
 jobs:
   build-test:
