@@ -12,6 +12,9 @@
   <artifactId>api</artifactId>
   <name>Arbre32 API</name>
   <packaging>jar</packaging>
+
+
+
   <dependencies>
     <dependency>
       <groupId>com.arbre32</groupId>
@@ -55,6 +58,7 @@
       <dependency>
           <groupId>org.springframework.boot</groupId>
           <artifactId>spring-boot-starter-security</artifactId>
+          <version>3.0.0</version>
       </dependency>
 
       <dependency>
