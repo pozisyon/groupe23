@@ -1,4 +1,4 @@
-# L'Arbre des 32 cartes – Projet "studio-grade" (v2)
+# L'Arbre des 32 cartes – Projet de fin de session du groupe 23
 - **core/** : moteur du jeu (Java)
 - **api/** : API Spring Boot (REST + JSON), renvoie un plateau 4×8
 - **frontend/** : React (Vite) qui affiche le plateau
