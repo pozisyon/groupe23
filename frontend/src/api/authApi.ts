@@ -1,8 +1,8 @@
-import api from "./http";
-import { User } from "../store/authStore";
+import { api } from "./http";
+import type { User } from "../store/authStore";
 
 interface LoginRequest {
-  username: string;
+  email: string;
   password: string;
 }
 
@@ -12,7 +12,7 @@ interface LoginResponse {
 }
 
 interface RegisterRequest {
-  username: string;
+  email: string;
   password: string;
 }
 
@@ -21,7 +21,6 @@ export const AuthApi = {
     const res = await api.post<LoginResponse>("/auth/login", payload);
     return res.data;
   },
-
   async register(payload: RegisterRequest): Promise<void> {
     await api.post("/auth/register", payload);
   },

@@ -1,140 +1,145 @@
-import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { GameApi } from "../api/gameApi";
-import { useGameStore, GameSummary } from "../store/gameStore";
-import { LoadingSpinner } from "../components/common/LoadingSpinner";
+// src/pages/LobbyPage.tsx
+import { useEffect, useState } from "react";
+import { useGame } from "../context/GameContext";
+import { api } from "../api/http";
+import { useSearchParams } from "react-router-dom";
 
-export const LobbyPage: React.FC = () => {
-  const navigate = useNavigate();
-  const games = useGameStore((s) => s.games);
-  const setGames = useGameStore((s) => s.setGames);
+interface OpenGame {
+  id: string;
+  players?: number;
+  status?: string;
+}
 
+export default function LobbyPage() {
+  const { initNewGame, joinGame } = useGame();
+
+  const [waiting, setWaiting] = useState<OpenGame[]>([]);
   const [loading, setLoading] = useState(false);
+  const [manualId, setManualId] = useState("");
 
-  const fetchGames = async () => {
+  // Pour récupérer ?new=xxxx depuis l’URL
+  const [params] = useSearchParams();
+
+  // ----- PRÉ-REMPLIR L’ID APRÈS CRÉATION -----
+  useEffect(() => {
+    const newId = params.get("new");
+    if (newId) {
+      setManualId(newId);
+    }
+  }, [params]);
+
+  // ----- LOAD OPEN GAMES -----
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const res = await api.get("/api/game/open");
+        setWaiting(res.data);
+      } catch (e) {
+        console.error("Erreur chargement open games:", e);
+      }
+    };
+
+    load();
+    const t = setInterval(load, 5000);
+    return () => clearInterval(t);
+  }, []);
+
+  const handleJoin = async (id: string) => {
+    if (!id) return;
     setLoading(true);
     try {
-      const list = await GameApi.listGames();
-      setGames(list);
+      await joinGame(id); // navigate est déjà dedans
     } catch (e) {
-      console.error(e);
+      console.error("Erreur join:", e);
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => {
-    fetchGames();
-  }, []);
-
-  const handleCreateGame = async () => {
-    try {
-      const game = await GameApi.createGame();
-      navigate(`/game/${game.id}`);
-    } catch (e) {
-      console.error(e);
-      alert("Erreur lors de la création de la partie.");
-    }
-  };
-
-  const handleJoin = async (game: GameSummary) => {
-    try {
-      const joined = await GameApi.joinGame(game.id);
-      navigate(`/game/${joined.id}`);
-    } catch (e) {
-      console.error(e);
-      alert("Impossible de rejoindre cette partie.");
-    }
-  };
-
-  const statusLabel = (status: GameSummary["status"]) => {
-    switch (status) {
-      case "WAITING":
-        return "En attente";
-      case "IN_PROGRESS":
-        return "En cours";
-      case "FINISHED":
-        return "Terminée";
-    }
-  };
-
   return (
-    <div>
-      <h1 className="page-title">Lobby des parties</h1>
-      <p className="page-description">
-        Crée une nouvelle partie d&apos;Arbre32 ou rejoins une partie existante. Tout est synchronisé avec le backend Spring Boot.
-      </p>
+    <div className="p-6 space-y-8 max-w-xl mx-auto">
+      <h1 className="text-2xl font-bold mb-4">Lobby</h1>
 
-      <div className="lobby-grid">
-        <div className="card">
-          <div className="card-header">
-            <div>
-              <div className="card-title">Parties disponibles</div>
-              <div className="card-subtitle">
-                {games.length === 0 ? "Aucune partie pour le moment." : `${games.length} partie(s) trouvée(s).`}
-              </div>
-            </div>
-            <button className="btn secondary" onClick={fetchGames} disabled={loading}>
-              Rafraîchir
-            </button>
-          </div>
+      {/* CRÉATION */}
+      <div className="space-y-3 border p-4 rounded-md">
+        <h2 className="text-lg font-semibold">Créer une nouvelle partie</h2>
 
-          {loading && <LoadingSpinner />}
+        <div className="flex gap-3">
+          <button
+            onClick={() => initNewGame(32)}
+            className="btn-primary"
+          >
+            32 cartes
+          </button>
 
-          <div className="lobby-list">
-            {games.map((g) => (
-              <div key={g.id} className="lobby-item">
-                <div className="lobby-item-main">
-                  <div className="lobby-item-title">
-                    <span className={`status-dot ${g.status.toLowerCase()}`}></span>
-                    Partie #{g.id}
-                  </div>
-                  <div className="lobby-item-meta">
-                    <span className={`badge ${g.status.toLowerCase()}`}>{statusLabel(g.status)}</span>{" "}
-                    <span style={{ marginLeft: "0.4rem" }}>
-                      Joueurs : {g.players && g.players.length > 0 ? g.players.join(", ") : "aucun pour l'instant"}
-                    </span>
-                  </div>
-                </div>
-                <div className="lobby-actions">
-                  <button
-                    className="btn"
-                    onClick={() => handleJoin(g)}
-                    disabled={g.status === "FINISHED"}
-                  >
-                    Rejoindre
-                  </button>
-                  <span className="text-muted">Statut temps réel via WebSocket en jeu</span>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {games.length === 0 && !loading && (
-            <div className="text-center mt-md text-muted">
-              Crée la première partie pour commencer à jouer.
-            </div>
-          )}
+          <button
+            onClick={() => initNewGame(52)}
+            className="btn-secondary"
+          >
+            52 cartes
+          </button>
         </div>
 
-        <div className="card">
-          <div className="card-header">
-            <div>
-              <div className="card-title">Créer une partie</div>
-              <div className="card-subtitle">Lance une nouvelle session Arbre32</div>
-            </div>
+        {manualId && (
+          <div className="text-xs opacity-70">
+            Partie créée : ID <b>{manualId}</b> — vous devez la rejoindre.
           </div>
-          <p className="text-muted">
-            Une nouvelle partie sera créée côté backend, et tu seras automatiquement redirigé vers le plateau.
-          </p>
-          <button className="btn mt-md" onClick={handleCreateGame}>
-            Créer une nouvelle partie
-          </button>
-          <p className="mt-md text-muted">
-            Tous les états de jeu (cartes, tours, scores) seront gérés par le backend Spring Boot et diffusés en temps réel via WebSocket.
-          </p>
+        )}
+      </div>
+
+      {/* JOIN VIA ID */}
+      <div className="space-y-3 border p-4 rounded-md">
+        <h2 className="text-lg font-semibold">Rejoindre une partie existante</h2>
+
+        <input
+          value={manualId}
+          onChange={(e) => setManualId(e.target.value)}
+          placeholder="ID de la partie"
+          className="w-full border rounded px-3 py-2"
+        />
+
+        <button
+          onClick={() => handleJoin(manualId)}
+          disabled={!manualId || loading}
+          className="w-full py-2 bg-green-600 text-white rounded hover:bg-green-700"
+        >
+          Rejoindre
+        </button>
+      </div>
+
+      {/* LISTE DES PARTIES EN ATTENTE */}
+      <div className="space-y-3 border p-4 rounded-md">
+        <h2 className="text-lg font-semibold">Parties en attente</h2>
+
+        {waiting.length === 0 && (
+          <p className="text-sm opacity-70">Aucune partie en attente…</p>
+        )}
+
+        <div className="space-y-2">
+          {waiting.map((g) => (
+            <div
+              key={g.id}
+              className="border rounded p-3 flex justify-between items-center"
+            >
+              <div>
+                <div className="font-medium">Partie {g.id}</div>
+                <div className="text-xs opacity-70">
+                  En attente d'un joueur…
+                </div>
+              </div>
+
+              <button
+                onClick={() => handleJoin(g.id)}
+                disabled={loading}
+                className="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700"
+              >
+                Rejoindre
+              </button>
+            </div>
+          ))}
         </div>
       </div>
     </div>
   );
-};
+}
+

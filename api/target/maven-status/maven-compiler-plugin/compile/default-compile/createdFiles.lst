@@ -10,6 +10,7 @@ com/arbre32/api/config/CorsConfig.class
 com/arbre32/api/game/dto/GameStateDTO.class
 com/arbre32/api/game/dto/CardDTO.class
 com/arbre32/api/game/dto/PlayRequest.class
+com/arbre32/api/game/SpaController.class
 com/arbre32/api/game/GameController$JoinRequest.class
 com/arbre32/api/user/PlayerAccountRepository.class
 com/arbre32/api/user/dto/RegisterRequest.class

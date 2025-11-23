@@ -1,3 +1,4 @@
+// src/api/http.ts
 import axios from "axios";
 import { useAuthStore } from "../store/authStore";
 
@@ -7,13 +8,18 @@ export const api = axios.create({
   baseURL,
 });
 
+// 🔥 Toujours injecter le token + JSON
 api.interceptors.request.use((config) => {
   const token = useAuthStore.getState().token;
+
+  config.headers = config.headers ?? {};
+  config.headers["Content-Type"] = "application/json";
+  config.headers.Accept = "application/json";
+
   if (token) {
-    config.headers = config.headers ?? {};
     config.headers.Authorization = `Bearer ${token}`;
   }
+
   return config;
 });
 
-export default api;

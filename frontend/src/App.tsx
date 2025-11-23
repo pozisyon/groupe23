@@ -1,58 +1,44 @@
 import React, { useEffect } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
+import Header from "./components/layout/Header";
+import HomePage from "./pages/HomePage";
+import LobbyPage from "./pages/LobbyPage";
+import GamePage from "./pages/GamePage";
+import LoginPage from "./pages/LoginPage";
+import RegisterPage from "./pages/RegisterPage";
 import { useAuthStore } from "./store/authStore";
-import { Header } from "./components/layout/Header";
-import { LoginPage } from "./pages/LoginPage";
-import { RegisterPage } from "./pages/RegisterPage";
-import { LobbyPage } from "./pages/LobbyPage";
-import { GamePage } from "./pages/GamePage";
-import { NotFoundPage } from "./pages/NotFoundPage";
+import { GameProvider } from "./context/GameContext";
+import { ChatProvider } from "./context/ChatContext";
 
-const ProtectedRoute: React.FC<{ children: React.ReactElement }> = ({ children }) => {
-  const token = useAuthStore((s) => s.token);
-  if (!token) {
-    return <Navigate to="/login" replace />;
-  }
+function ProtectedRoute({ children }: { children: React.ReactElement }) {
+  const token = useAuthStore(s => s.token);
+  if (!token) return <Navigate to="/login" replace />;
   return children;
-};
+}
 
-const App: React.FC = () => {
-  const restore = useAuthStore((s) => s.restore);
+export default function App({ dark, onToggleDark }: { dark: boolean; onToggleDark: ()=>void }) {
+  const restore = useAuthStore(s => s.restore);
 
-  // 👉 Restaurer l'utilisateur AVANT tout rendu
-  useEffect(() => {
-    restore();
-  }, [restore]);
+  useEffect(() => { restore(); }, [restore]);
 
   return (
-    <div className="app-root">
-      <Header />
-      <main className="app-main">
-        <Routes>
-          <Route path="/" element={<Navigate to="/lobby" replace />} />
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/register" element={<RegisterPage />} />
-          <Route
-            path="/lobby"
-            element={
-              <ProtectedRoute>
-                <LobbyPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/game/:id"
-            element={
-              <ProtectedRoute>
-                <GamePage />
-              </ProtectedRoute>
-            }
-          />
-          <Route path="*" element={<NotFoundPage />} />
-        </Routes>
-      </main>
+    <div className="min-h-screen flex flex-col">
+      <Header dark={dark} onToggleDark={onToggleDark} />
+      <GameProvider>
+        <ChatProvider>
+          <main className="flex-1">
+            <Routes>
+              <Route path="/" element={<HomePage />} />
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/register" element={<RegisterPage />} />
+              <Route path="/lobby" element={<ProtectedRoute><LobbyPage /></ProtectedRoute>} />
+              <Route path="/game" element={<ProtectedRoute><GamePage /></ProtectedRoute>} />
+              <Route path="/game/:id" element={<ProtectedRoute><GamePage /></ProtectedRoute>} />
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </main>
+        </ChatProvider>
+      </GameProvider>
     </div>
   );
-};
-
-export default App;
+}

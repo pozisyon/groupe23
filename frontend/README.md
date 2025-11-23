@@ -1,42 +1,35 @@
-# Arbre32 Frontend (React + Vite)
+# Arbre32 Pro Frontend (React + Vite + Tailwind)
 
-Frontend complet pour le projet **Arbre32** (jeu de stratégie) en React + TypeScript.
+Frontend "pro" pour le jeu Arbre32, adapté à un backend Spring Boot avec :
+- Authentification **email + mot de passe** (JWT)
+- API REST pour les parties
+- WebSocket STOMP (/ws, /topic/chat/{id}, /app/chat/{id})
 
-## ⚙️ Prérequis
+## Endpoints attendus côté backend
 
-- Node.js 18+ recommandé
-- Backend Spring Boot Arbre32 déjà lancé sur `http://localhost:8080`
+- `POST /api/auth/login` → `{ email, password }` → `{ token, user }`
+- `POST /api/auth/register` → `{ email, password }`
+- `GET  /api/games/open` → liste des parties pour le lobby
+- `POST /api/games` → `{ players: string[], deckType: "32" | "52" }` → GameDTO
+- `GET  /api/games/{id}` → GameDTO
+- `POST /api/games/{id}/play` → `{ cardId }` → GameDTO
+- WebSocket STOMP sur `/ws`
+  - Souscription chat : `/topic/chat/{gameId}`
+  - Envoi chat : `/app/chat/{gameId}`
 
-## 🚀 Installation
+Adapte les chemins si ton backend diffère (fichiers `src/api/*.ts` et `src/context/*.tsx`).
+
+## Démarrage
 
 ```bash
 npm install
 npm run dev
 ```
 
-Par défaut, Vite démarre sur `http://localhost:5173`.
-
-## 🔗 Configuration de l'API
-
-Par défaut, le frontend pointe sur :
-
-- `http://localhost:8080` pour l'API REST
-- `http://localhost:8080/ws` pour le WebSocket SockJS
-
-Tu peux surcharger ces valeurs avec un fichier `.env` :
+Variables d'environnement optionnelles (fichier `.env` à la racine) :
 
 ```bash
 VITE_API_BASE_URL=http://localhost:8080
 VITE_WS_URL=http://localhost:8080/ws
 ```
 
-## 🧱 Structure
-
-- `src/App.tsx` : routes principales
-- `src/pages/*` : pages (`Login`, `Register`, `Lobby`, `Game`)
-- `src/api/*` : appels axios vers le backend
-- `src/store/*` : stores Zustand (auth, game)
-- `src/websocket/socket.ts` : client STOMP/SockJS
-- `src/components/*` : composants partagés
-
-Tu peux maintenant brancher la vraie logique d'affichage du plateau Arbre32 dans `GamePage.tsx`.

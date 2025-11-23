@@ -1,28 +1,62 @@
-import api from "./http";
-import { GameSummary, GameState } from "../store/gameStore";
+import { api } from "./http";
+
+export interface PlayerDTO {
+  id: string;
+  name: string;
+  score: number;
+}
+
+export interface CardDTO {
+  id: string;
+  value: string;
+  suit: string;
+  depth: number;
+  playable: boolean;
+  locked: boolean;
+  power?: boolean;
+}
+
+export interface GameDTO {
+  gameId: string;
+  rootLocked: boolean;
+  turnIndex: number;
+  currentPlayer: string | null;
+  players: PlayerDTO[];
+  maxDepth: number;
+  board: CardDTO[][];
+}
+
+
+
 
 export const GameApi = {
-  async listGames(): Promise<GameSummary[]> {
-    const res = await api.get<GameSummary[]>("/api/games");
+  // le backend renvoie déjà tout le GameDTO
+  async createGame(mode: 32 | 52): Promise<GameDTO> {
+    const res = await api.post<GameDTO>("/api/game/create", { mode });
     return res.data;
   },
 
-  async createGame(): Promise<GameState> {
-    const res = await api.post<GameState>("/api/games");
+  async getState(gameId: string): Promise<GameDTO> {
+    const res = await api.get<GameDTO>(`/api/game/${gameId}/state`);
     return res.data;
   },
 
-  async joinGame(id: string): Promise<GameState> {
-    const res = await api.post<GameState>(`/api/games/${id}/join`);
+  async joinGame(gameId: string, userHandle: string): Promise<GameDTO> {
+    const res = await api.post<GameDTO>(`/api/game/${gameId}/join`, {
+      userHandle,
+    });
     return res.data;
   },
 
-  async getGame(id: string): Promise<GameState> {
-    const res = await api.get<GameState>(`/api/games/${id}`);
+  async playCard(
+    gameId: string,
+    cardId: string,
+    userHandle: string
+  ): Promise<GameDTO> {
+    const res = await api.post<GameDTO>(`/api/game/${gameId}/play`, {
+      cardId,
+      userHandle,
+    });
     return res.data;
-  },
-
-  async playMove(id: string, payload: unknown): Promise<void> {
-    await api.post(`/api/games/${id}/move`, payload);
   },
 };

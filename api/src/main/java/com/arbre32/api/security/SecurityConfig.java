@@ -30,7 +30,11 @@ public class SecurityConfig {
                                 "/api/lobby/open",
                                 "/api/chat/**",
                                 "/api/game/**",
-                                "/api/games"
+                                "/api/games",
+                                "/",           // index
+                                "/index.html",
+                                "/assets/**",
+                                "/static/**"
                         ).permitAll()
                         .anyRequest().authenticated()
                 )
