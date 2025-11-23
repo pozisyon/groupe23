@@ -19,6 +19,9 @@ public class GameStateDTO {
     // plateau
     public List<List<CardDTO>> board;
 
+    public boolean gameOver;
+    public String winner;
+
     public static class PlayerDTO {
         public String id;    // == handle
         public String name;

@@ -1,3 +1,4 @@
+// src/main/java/com/arbre32/core/engine/GameState.java
 package com.arbre32.core.engine;
 
 import com.arbre32.core.model.Card;
@@ -15,10 +16,13 @@ public class GameState {
     private boolean rootLocked = true;
     private int turnIndex = 0;
 
-    // ----- NOUVEAU : joueurs dynamiques -----
+    // ----- JOUEURS DYNAMIQUES -----
     private final Map<String, Player> players = new LinkedHashMap<>();
     private final List<String> turnOrder = new ArrayList<>();
     private int currentPlayerIndex = 0;
+
+    // 🔥 NOUVEAU : ensemble des cartes déjà retirées du plateau
+    private final Set<String> removedCards = new HashSet<>();
 
     public GameState(String id, GameTree<Card> tree){
         this.id = id;
@@ -33,6 +37,8 @@ public class GameState {
 
     public int turnIndex(){ return turnIndex; }
     public void incrementTurnIndex(){ turnIndex++; }
+
+    private boolean gameOver = false;
 
     // ----- GESTION DES JOUEURS -----
 
@@ -62,13 +68,34 @@ public class GameState {
         return players.get(handle);
     }
 
-    // ---- UTILITAIRE ----
+
 
     public Optional<TreeNode<Card>> findById(String cardId){
-        return tree.find(n -> n.value().id().equals(cardId));
+        return tree.find(n ->
+                n.value().id().equals(cardId)
+                        && !n.value().isRemoved()   // ✅ NE PAS retourner les cartes déjà ramassées
+        );
     }
+
 
     public int maxDepth(){
         return tree.maxDepth();
     }
+
+    // 🔥 NOUVEAU : gestion des cartes retirées
+
+    /** Marque une liste de cartes comme retirées définitivement du plateau. */
+    public void markCardsRemoved(Collection<Card> cards) {
+        for (Card c : cards) {
+            removedCards.add(c.id());
+        }
+    }
+
+    /** Indique si une carte (par id) a déjà été retirée du plateau. */
+    public boolean isCardRemoved(String cardId) {
+        return removedCards.contains(cardId);
+    }
+    public boolean isGameOver() { return gameOver; }
+    public void setGameOver(boolean v) { this.gameOver = v; }
+
 }

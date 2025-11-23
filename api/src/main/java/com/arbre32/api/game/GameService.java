@@ -94,6 +94,22 @@ public class GameService {
         GameStateDTO dto = GameMapper.toDto(st, engine);
         broker.convertAndSend("/topic/game/" + id, dto);
 
+        // 🔥 annoncer fin de partie
+        if (dto.gameOver) {
+
+            String winner = dto.winner != null ? dto.winner : "aucun";
+
+            broker.convertAndSend(
+                    "/topic/chat/" + id,
+                    Map.of(
+                            "sender", "SYSTEM",
+                            "content", "🎉 La partie est terminée ! Gagnant : " + winner
+                    )
+            );
+
+            return new PlayResult(200, null, dto); // plus d'action
+        }
+
         // 👉 Construire le message de chat SI un vrai coup a été joué
         if (result.getPlayedCard() != null) {
             String playedLabel = result.getPlayedCard().toString(); // ex: "Q♠"

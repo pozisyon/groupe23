@@ -60,10 +60,32 @@ public class GameEngine {
      * - le verrouillage de la racine
      */
     public boolean isPlayable(GameState st, TreeNode<Card> node, boolean childrenCollectedThisTurn) {
+
+        // ✅ Carte déjà ramassée → jamais jouable
+        if (node.value().isRemoved()) {
+            return false;
+        }
+
         int maxDepth = st.maxDepth();
         return rules.isDepthAllowed(node, st.turnIndex(), maxDepth)
                 && rules.isNodeTakable(node, childrenCollectedThisTurn)
                 && !(st.rootLocked() && node == st.tree().root());
+    }
+
+    /**
+     * Y a-t-il au moins un coup jouable ?
+     */
+    public boolean hasAnyPlayableMove(GameState st) {
+        for (TreeNode<Card> node : st.tree().nodesBreadth()) {
+            Card c = node.value();
+            if (c.isRemoved()) continue; // ✅ ignorer les cartes déjà prises
+
+            boolean childrenCollectedThisTurn = !node.children().isEmpty();
+            if (isPlayable(st, node, childrenCollectedThisTurn)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
@@ -95,7 +117,9 @@ public class GameEngine {
             List<TreeNode<Card>> children = new ArrayList<>(root.children());
 
             if (children.isEmpty()) {
-                // Arbre vide : root sans enfants
+                // ✅ Arbre réduit à une seule carte :
+                // on laisse le root mais la carte sera marquée "removed"
+                // → plus affichée, plus jouable
                 root._childrenMutable().clear();
                 return;
             }
@@ -148,9 +172,6 @@ public class GameEngine {
     }
 
     /**
-     * Applique un coup pour un joueur dynamique.
-     */
-    /**
      * Applique un coup pour un joueur dynamique et retourne le résultat du coup.
      */
     public MoveResult applyMove(GameState st, Move move) {
@@ -162,6 +183,7 @@ public class GameEngine {
 
         TreeNode<Card> node = st.findById(move.cardId()).orElse(null);
         if (node == null) {
+            // Carte introuvable (ou déjà removed) : on passe le tour
             st.advanceTurn();
             st.incrementTurnIndex();
             return new MoveResult(null, List.of(), 0);
@@ -201,6 +223,11 @@ public class GameEngine {
             removeSubtree(st, node);
         }
 
+        // ----------- MARQUER LES CARTES COMME REMOVED -------------
+        for (Card c : gained) {
+            c.markRemoved();   // ✅ très important
+        }
+
         // ----------- POINTS -------------
         int pts = scoring.scoreForCards(gained);
         if (node == st.tree().root()) {
@@ -215,6 +242,10 @@ public class GameEngine {
         st.advanceTurn();
         st.incrementTurnIndex();
 
+// 🔥 Si le jeu est terminé : plus jamais de "c'est votre tour"
+        if (!hasAnyPlayableMove(st)) {
+            st.setGameOver(true);
+        }
         // ----------- Retour du résultat -------------
         return new MoveResult(
                 node.value(),   // carte jouée

@@ -1,75 +1,114 @@
-// src/main/java/com/arbre32/api/game/GameMapper.java
 package com.arbre32.api.game;
 
 import com.arbre32.api.game.dto.GameStateDTO;
+import com.arbre32.api.game.dto.GameStateDTO.CardDTO;
+import com.arbre32.api.game.dto.GameStateDTO.PlayerDTO;
 import com.arbre32.core.engine.GameEngine;
 import com.arbre32.core.engine.GameState;
 import com.arbre32.core.model.Card;
 import com.arbre32.core.model.Player;
+import com.arbre32.core.tree.GameTree;
 import com.arbre32.core.tree.TreeNode;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
 
 public class GameMapper {
 
+    /**
+     * Convertit l'état interne du jeu (GameState) en GameStateDTO pour le frontend.
+     */
     public static GameStateDTO toDto(GameState st, GameEngine engine) {
-        GameStateDTO dto = new GameStateDTO();
 
-        dto.gameId      = st.id();
-        dto.rootLocked  = st.rootLocked();
-        dto.turnIndex   = st.turnIndex();
-        dto.maxDepth    = st.maxDepth();
+        GameStateDTO dto = new GameStateDTO();
+        dto.gameId = st.id();
+        dto.rootLocked = st.rootLocked();
+        dto.turnIndex = st.turnIndex();
+        dto.maxDepth = st.maxDepth();
         dto.currentPlayer = st.currentPlayer();
 
-        // --- joueurs dynamiques ---
-        List<GameStateDTO.PlayerDTO> players = new ArrayList<>();
+        // -------------------------------
+        // 1) PLAYER MAPPING
+        // -------------------------------
+        List<PlayerDTO> plist = new ArrayList<>();
         for (Player p : st.allPlayers()) {
-            GameStateDTO.PlayerDTO pd = new GameStateDTO.PlayerDTO();
-            pd.id    = p.id();   // == handle
-            pd.name  = p.name();
+            PlayerDTO pd = new PlayerDTO();
+            pd.id = p.id();
+            pd.name = p.name();
             pd.score = p.score();
-            players.add(pd);
+            plist.add(pd);
         }
-        dto.players = players;
+        dto.players = plist;
 
-        // --- plateau groupé par profondeur ---
-        Map<Integer, List<TreeNode<Card>>> grouped = new TreeMap<>();
+        // -------------------------------
+        // 2) BOARD MAPPING (par profondeur)
+        // -------------------------------
+        GameTree<Card> tree = st.tree();
 
-        for (TreeNode<Card> n : st.tree().nodesBreadth()) {
-            int d = n.depth();
-            grouped.computeIfAbsent(d, k -> new ArrayList<>()).add(n);
+        int depthMax = tree.maxDepth();
+        List<List<CardDTO>> levels = new ArrayList<>();
+        for (int d = 0; d <= depthMax; d++) {
+            levels.add(new ArrayList<>());
         }
 
-        dto.board = new ArrayList<>();
+        for (TreeNode<Card> node : tree.nodesBreadth()) {
+            Card c = node.value();
 
-        for (Map.Entry<Integer, List<TreeNode<Card>>> e : grouped.entrySet()) {
-            List<GameStateDTO.CardDTO> row = new ArrayList<>();
-
-            for (TreeNode<Card> n : e.getValue()) {
-                Card c = n.value();
-                GameStateDTO.CardDTO cd = new GameStateDTO.CardDTO();
-
-                cd.id    = c.id();
-                cd.value = c.rank().label();
-                cd.suit  = c.suit().symbol();
-                cd.power = c.isPower();
-                cd.depth = n.depth();
-
-                boolean childrenCollected = !n.children().isEmpty();
-                boolean playable = engine.isPlayable(st, n, childrenCollected);
-
-                cd.playable = playable;
-                cd.locked   = computeLocked(n, st, playable);
-
-                row.add(cd);
+            // ✅ Ne jamais afficher les cartes déjà ramassées
+            if (c.isRemoved()) {
+                continue;
             }
 
-            dto.board.add(row);
+            CardDTO cd = new CardDTO();
+            cd.id = c.id();
+            cd.value = c.rank().name();      // ou c.rank().symbol() selon ta classe
+            cd.suit = c.suit().symbol();
+            cd.power = c.isPower();
+            cd.depth = node.depth();
+
+            boolean childrenCollectedThisTurn = !node.children().isEmpty();
+            boolean playable = engine.isPlayable(st, node, childrenCollectedThisTurn);
+            cd.playable = playable;
+
+            // locked = inverse de playable (et racine verrouillée)
+            cd.locked = computeLocked(node, st, playable);
+
+            levels.get(cd.depth).add(cd);
+        }
+
+        dto.board = levels;
+
+        // -------------------------------
+        // 3) GAME OVER ?
+        // -------------------------------
+        boolean playableExists = engine.hasAnyPlayableMove(st);
+        dto.gameOver = !playableExists;
+
+        // -------------------------------
+        // 4) WINNER ?
+        // -------------------------------
+        dto.winner = null;
+
+        if (dto.gameOver && !st.allPlayers().isEmpty()) {
+            Player winner = st.allPlayers()
+                    .stream()
+                    .max(Comparator.comparingInt(Player::score))
+                    .orElse(null);
+
+            if (winner != null) {
+                dto.winner = winner.name();
+            }
         }
 
         return dto;
     }
 
+    /**
+     * locked = true si :
+     *  - c'est la racine et rootLocked = true
+     *  - OU la carte n'est pas jouable
+     */
     private static boolean computeLocked(TreeNode<Card> node, GameState st, boolean playable) {
         if (node.depth() == 0 && st.rootLocked()) {
             return true;
