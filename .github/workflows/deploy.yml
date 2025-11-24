@@ -5,68 +5,53 @@ on:
     branches: [ "master" ]
 
 jobs:
-  build:
-    name: Build & Test
+  build-test:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v3
+    - uses: actions/checkout@v3
 
-      # Install Java & Node
-      - name: Setup Java
-        uses: actions/setup-java@v3
-        with:
-          distribution: 'temurin'
-          java-version: '17'
+    # 1️⃣ Installer tout le projet multi-module
+    - name: Maven install parent + modules
+      run: |
+        mvn -B -DskipTests clean install
 
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: '18'
+    # 2️⃣ Build backend API
+    - name: Build backend
+      run: |
+        cd api
+        mvn -B -DskipTests package
 
-      # ---------- BUILD BACKEND (Maven multi-module) ----------
-      - name: Build backend (core + api)
-        run: |
-          mvn -B -DskipTests clean install
+    # 3️⃣ Build frontend React
+    - name: Build frontend
+      run: |
+        cd frontend
+        npm install
+        npm run build
 
-      # ---------- BUILD FRONTEND ----------
-      - name: Build frontend
-        run: |
-          cd frontend
-          npm install
-          npm run build
+    # 4️⃣ Build Docker images
+    - name: Build Docker images
+      run: docker compose build
 
-      # ---------- PREPARE ARTIFACTS FOR DOCKER ----------
-      - name: Copy backend JAR
-        run: |
-          mkdir -p docker-artifacts
-          cp api/target/api-1.0.0.jar docker-artifacts/backend.jar
+  push-to-registry:
+    needs: build-test
+    runs-on: ubuntu-latest
 
-      - name: Copy frontend dist
-        run: |
-          mkdir -p docker-artifacts/frontend
-          cp -r frontend/dist docker-artifacts/frontend
+    steps:
+    - uses: actions/checkout@v3
 
-      # ---------- DOCKER LOGIN ----------
-      - name: Login to DockerHub
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKERHUB_USER }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
+    - name: Login to DockerHub
+      uses: docker/login-action@v3
+      with:
+        username: ${{ secrets.DOCKERHUB_USER }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      # ---------- BUILD & PUSH BACKEND IMAGE ----------
-      - name: Build & Push backend image
-        run: |
-          docker build -t ${{ secrets.DOCKERHUB_USER }}/arbre32-backend:latest \
-            -f docker/Dockerfile.backend \
-            docker-artifacts
-          docker push ${{ secrets.DOCKERHUB_USER }}/arbre32-backend:latest
+    - name: Build & Push backend
+      run: |
+        docker build -t ${{ secrets.DOCKERHUB_USER }}/arbre32-backend:latest ./api
+        docker push ${{ secrets.DOCKERHUB_USER }}/arbre32-backend:latest
 
-      # ---------- BUILD & PUSH FRONTEND IMAGE ----------
-      - name: Build & Push frontend image
-        run: |
-          docker build -t ${{ secrets.DOCKERHUB_USER }}/arbre32-frontend:latest \
-            -f docker/Dockerfile.frontend \
-            docker-artifacts
-          docker push ${{ secrets.DOCKERHUB_USER }}/arbre32-frontend:latest
+    - name: Build & Push frontend
+      run: |
+        docker build -t ${{ secrets.DOCKERHUB_USER }}/arbre32-frontend:latest ./frontend
+        docker push ${{ secrets.DOCKERHUB_USER }}/arbre32-frontend:latest
