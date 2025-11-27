@@ -1,57 +1,41 @@
-name: CI/CD Arbre32
+name: Build & Push arbre32
 
 on:
   push:
-    branches: [ "master" ]
+    branches: [ "main" ]
+  workflow_dispatch:
 
 jobs:
-  build-test:
+  build:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v3
+      # ------------------------------
+      # Checkout du code
+      # ------------------------------
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-    # 1️⃣ Installer tout le projet multi-module
-    - name: Maven install parent + modules
-      run: |
-        mvn -B -DskipTests clean install
+      # ------------------------------
+      # Login Docker Hub
+      # ------------------------------
+      - name: Login to DockerHub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
 
-    # 2️⃣ Build backend API
-    - name: Build backend
-      run: |
-        cd api
-        mvn -B -DskipTests package
+      # ------------------------------
+      # Build Docker multi-module
+      # Utilise le Dockerfile RACINE !!!
+      # ------------------------------
+      - name: Build backend image
+        run: |
+          docker build -t tchenn/arbre32-backend:latest -f Dockerfile .
 
-    # 3️⃣ Build frontend React
-    - name: Build frontend
-      run: |
-        cd frontend
-        npm install
-        npm run build
-
-    # 4️⃣ Build Docker images
-    - name: Build Docker images
-      run: docker compose build
-
-  push-to-registry:
-    needs: build-test
-    runs-on: ubuntu-latest
-
-    steps:
-    - uses: actions/checkout@v3
-
-    - name: Login to DockerHub
-      uses: docker/login-action@v3
-      with:
-        username: ${{ secrets.DOCKERHUB_USER }}
-        password: ${{ secrets.DOCKERHUB_TOKEN }}
-
-    - name: Build & Push backend
-      run: |
-        docker build -t ${{ secrets.DOCKERHUB_USER }}/arbre32-backend:latest ./api
-        docker push ${{ secrets.DOCKERHUB_USER }}/arbre32-backend:latest
-
-    - name: Build & Push frontend
-      run: |
-        docker build -t ${{ secrets.DOCKERHUB_USER }}/arbre32-frontend:latest ./frontend
-        docker push ${{ secrets.DOCKERHUB_USER }}/arbre32-frontend:latest
+      # ------------------------------
+      # Push Docker Hub
+      # ------------------------------
+      - name: Push backend image
+        run: |
+          docker push tchenn/arbre32-backend:latest
