@@ -1,7 +1,7 @@
 # =====================================================================
-# 1) FRONTEND (React)
+# 1) FRONTEND BUILD (React)
 # =====================================================================
-FROM node:18 AS frontend-builder
+FROM node:20.19.0 AS frontend-builder
 WORKDIR /frontend
 
 COPY frontend/package*.json ./
@@ -12,32 +12,35 @@ RUN npm run build
 
 
 # =====================================================================
-# 2) BACKEND (Spring Boot multi-module)
+# 2) BACKEND MULTI-MODULE MAVEN BUILD
 # =====================================================================
 FROM eclipse-temurin:17-jdk AS backend-builder
 WORKDIR /app
 
-# Copier l'ensemble du projet (parent + modules)
+# Copier tout le projet Maven (parent + modules)
 COPY . .
 
-# Rendre mvnw exécutable
+# Donner permission à mvnw
 RUN chmod +x mvnw
 
-# Copier le build React dans le backend Spring Boot
-RUN rm -rf backend/src/main/resources/static/*
-COPY --from=frontend-builder /frontend/build/ backend/src/main/resources/static/
+# Copier le frontend dans le module API (serveur web)
+RUN rm -rf api/src/main/resources/static/*
+COPY --from=frontend-builder /frontend/dist/ api/src/main/resources/static/
 
-# Build Maven multi-module (parent + backend)
+RUN mkdir -p api/src/main/frontend && echo "skip frontend build" > api/src/main/frontend/.skip
+
+# Build Maven multi-module (parent → api/core/tchat)
 RUN ./mvnw -B -DskipTests clean package
 
 
 # =====================================================================
-# 3) IMAGE FINALE
+# 3) RUNTIME IMAGE
 # =====================================================================
 FROM eclipse-temurin:17-jdk
 WORKDIR /app
 
-COPY --from=backend-builder /app/backend/target/*.jar app.jar
+# Copier le jar du module API (module final executable)
+COPY --from=backend-builder /app/api/target/*.jar app.jar
 
 EXPOSE 8080
 ENTRYPOINT ["java", "-jar", "app.jar"]
