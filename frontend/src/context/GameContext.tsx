@@ -36,8 +36,8 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
   // ---------- WEBSOCKET ----------
   useEffect(() => {
     if (!gameId) return;
-
-    const sock = new SockJS("http://localhost:8080/ws");
+ //const socket = new SockJS("/ws");
+   const sock = new SockJS("http://localhost:8080/ws");//new SockJS("http://localhost:8080/ws");
     const stomp = new Client({
       webSocketFactory: () => sock as any,
       reconnectDelay: 5000,

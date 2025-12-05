@@ -2,7 +2,9 @@
 import axios from "axios";
 import { useAuthStore } from "../store/authStore";
 
-const baseURL = import.meta.env.VITE_API_BASE_URL || "http://34.132.199.110:8080";
+const baseURL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080";
+//const baseURL = import.meta.env.VITE_API_BASE_URL || "http://34.132.199.110:8080";
+//const baseURL = import.meta.env.VITE_API_BASE_URL || "/";
 
 export const api = axios.create({
   baseURL,

@@ -8,6 +8,12 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
+
+        // 🔥 Endpoint WebSocket pur (PAS de fallback)
+        registry.addEndpoint("/ws")
+                .setAllowedOrigins("http://localhost:5173");
+
+        // 🔥 Endpoint SockJS (fallback si WS impossible)
         registry.addEndpoint("/ws")
                 .setAllowedOrigins("http://localhost:5173")
                 .withSockJS();
@@ -19,3 +25,4 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
         registry.setApplicationDestinationPrefixes("/app");
     }
 }
+

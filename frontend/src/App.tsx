@@ -1,6 +1,7 @@
 import React, { useEffect } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import Header from "./components/layout/Header";
+import Footer from "./components/layout/Footer";
 import HomePage from "./pages/HomePage";
 import LobbyPage from "./pages/LobbyPage";
 import GamePage from "./pages/GamePage";
@@ -39,6 +40,7 @@ export default function App({ dark, onToggleDark }: { dark: boolean; onToggleDar
           </main>
         </ChatProvider>
       </GameProvider>
+      <Footer />
     </div>
   );
 }

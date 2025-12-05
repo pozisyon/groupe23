@@ -19,6 +19,7 @@ com/arbre32/api/user/dto/AuthResponse.class
 com/arbre32/api/game/GameController.class
 com/arbre32/api/user/dto/UserDto.class
 ModeRequest.class
+com/arbre32/api/config/CorsConfig$1.class
 com/arbre32/api/lobby/LobbyController.class
 com/arbre32/api/user/PlayerAccount.class
 com/arbre32/api/chat/ChatMessage.class

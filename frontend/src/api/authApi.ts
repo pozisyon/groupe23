@@ -14,6 +14,7 @@ interface LoginResponse {
 interface RegisterRequest {
   email: string;
   password: string;
+  handle: string;
 }
 
 export const AuthApi = {

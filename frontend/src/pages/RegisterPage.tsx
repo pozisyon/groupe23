@@ -1,4 +1,4 @@
-import { FormEvent, useState } from "react";
+/*import { FormEvent, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { AuthApi } from "../api/authApi";
 
@@ -57,6 +57,128 @@ export default function RegisterPage() {
         </form>
         <div className="text-xs opacity-80">
           Déjà inscrit ? <Link to="/login" className="text-brand-600 hover:underline">Se connecter</Link>
+        </div>
+      </div>
+    </div>
+  );
+}
+*/
+import { FormEvent, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { AuthApi } from "../api/authApi";
+
+export default function RegisterPage() {
+  const navigate = useNavigate();
+  const [email, setEmail] = useState("");
+  const [handle, setHandle] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirm, setConfirm] = useState("");
+
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    setSuccess(null);
+
+    if (password !== confirm) {
+      setError("Les mots de passe ne correspondent pas.");
+      return;
+    }
+
+    if (!/^[a-zA-Z0-9_]{3,20}$/.test(handle)) {
+      setError("Le pseudo doit contenir 3–20 caractères alphanumériques.");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await AuthApi.register({ email, password, handle });
+      setSuccess("Compte créé avec succès !");
+      setTimeout(() => navigate("/login"), 1200);
+    } catch (err) {
+      console.error(err);
+      setError("Impossible de créer le compte. Vérifiez les données.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="flex items-center justify-center min-h-[calc(100vh-4rem)]">
+      <div className="card-smooth px-6 py-5 w-full max-w-md space-y-4">
+
+        <h2 className="text-lg font-semibold">Créer un compte</h2>
+
+        <form className="space-y-3" onSubmit={handleSubmit}>
+
+          {/* HANDLE */}
+          <div className="space-y-1 text-sm">
+            <label>Pseudo (handle)</label>
+            <input
+              type="text"
+              value={handle}
+              onChange={(e) => setHandle(e.target.value)}
+              placeholder="Ex : Tchenn, Brenn, Alpha32…"
+              className="w-full border dark:border-[#3a3b40] rounded px-3 py-2 bg-white dark:bg-[#2a2c31]"
+              required
+            />
+          </div>
+
+          {/* EMAIL */}
+          <div className="space-y-1 text-sm">
+            <label>Email</label>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full border dark:border-[#3a3b40] rounded px-3 py-2 bg-white dark:bg-[#2a2c31]"
+              required
+            />
+          </div>
+
+          {/* PASSWORD */}
+          <div className="space-y-1 text-sm">
+            <label>Mot de passe</label>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full border dark:border-[#3a3b40] rounded px-3 py-2 bg-white dark:bg-[#2a2c31]"
+              required
+            />
+          </div>
+
+          {/* CONFIRM */}
+          <div className="space-y-1 text-sm">
+            <label>Confirmer le mot de passe</label>
+            <input
+              type="password"
+              value={confirm}
+              onChange={(e) => setConfirm(e.target.value)}
+              className="w-full border dark:border-[#3a3b40] rounded px-3 py-2 bg-white dark:bg-[#2a2c31]"
+              required
+            />
+          </div>
+
+          {error && <div className="text-xs text-red-500">{error}</div>}
+          {success && <div className="text-xs text-emerald-500">{success}</div>}
+
+          <button
+            className="w-full py-2 rounded bg-brand-600 hover:bg-brand-700 text-white text-sm"
+            disabled={loading}
+          >
+            {loading ? "Création..." : "Créer le compte"}
+          </button>
+        </form>
+
+        <div className="text-xs opacity-80">
+          Déjà inscrit ?{" "}
+          <Link to="/login" className="text-brand-600 hover:underline">
+            Se connecter
+          </Link>
         </div>
       </div>
     </div>

@@ -34,6 +34,8 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
     }
 
     const socket = new SockJS("http://localhost:8080/ws");
+    //const socket = new SockJS("/ws");
+    //const socket = new SockJS("/ws");
     const client = new Client({
       webSocketFactory: () => socket as any,
       debug: () => {},
