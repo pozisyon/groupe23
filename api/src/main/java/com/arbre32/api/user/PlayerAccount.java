@@ -11,6 +11,9 @@ public class PlayerAccount {
   @Column(nullable=false, length=30) private String role="USER";
   @Column(nullable=false, length=30) private String status="ACTIVE";
   @Column(nullable=false) private Instant createdAt=Instant.now();
+  public boolean isAdmin() {
+    return "ADMIN".equalsIgnoreCase(role);
+  }
   public UUID getId(){return id;} public void setId(UUID id){this.id=id;}
   public String getHandle(){return handle;} public void setHandle(String h){this.handle=h;}
   public String getEmail(){return email;} public void setEmail(String e){this.email=e;}

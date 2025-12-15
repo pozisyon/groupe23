@@ -12,7 +12,9 @@ import com.arbre32.core.tree.TreeNode;
 
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class GameMapper {
 
@@ -29,7 +31,7 @@ public class GameMapper {
         dto.currentPlayer = st.currentPlayer();
 
         // -------------------------------
-        // 1) PLAYER MAPPING
+        // 1) PLAYERS
         // -------------------------------
         List<PlayerDTO> plist = new ArrayList<>();
         for (Player p : st.allPlayers()) {
@@ -42,7 +44,7 @@ public class GameMapper {
         dto.players = plist;
 
         // -------------------------------
-        // 2) BOARD MAPPING (par profondeur)
+        // 2) BOARD (par profondeur)
         // -------------------------------
         GameTree<Card> tree = st.tree();
 
@@ -55,24 +57,23 @@ public class GameMapper {
         for (TreeNode<Card> node : tree.nodesBreadth()) {
             Card c = node.value();
 
-            // ✅ Ne jamais afficher les cartes déjà ramassées
+            // Ne jamais afficher les cartes déjà ramassées
             if (c.isRemoved()) {
                 continue;
             }
 
             CardDTO cd = new CardDTO();
             cd.id = c.id();
-            cd.value = c.rank().name();      // ou c.rank().symbol() selon ta classe
+            cd.value = c.rank().name();
             cd.suit = c.suit().symbol();
             cd.power = c.isPower();
             cd.depth = node.depth();
 
             boolean childrenCollectedThisTurn = !node.children().isEmpty();
             boolean playable = engine.isPlayable(st, node, childrenCollectedThisTurn);
-            cd.playable = playable;
 
-            // locked = inverse de playable (et racine verrouillée)
-            cd.locked = computeLocked(node, st, playable);
+            cd.playable = playable;
+            cd.locked = !playable || (node.depth() == 0 && st.rootLocked());
 
             levels.get(cd.depth).add(cd);
         }
@@ -80,39 +81,45 @@ public class GameMapper {
         dto.board = levels;
 
         // -------------------------------
-        // 3) GAME OVER ?
+        // 3) Best-of-3
         // -------------------------------
-        boolean playableExists = engine.hasAnyPlayableMove(st);
-        dto.gameOver = !playableExists;
+        dto.round = st.getRound();
+
+        Map<String, Integer> rw = new HashMap<>();
+        for (Map.Entry<String, Integer> e : st.getRoundsWon().entrySet()) {
+            rw.put(e.getKey(), e.getValue());
+        }
+        dto.roundsWon = rw;
 
         // -------------------------------
-        // 4) WINNER ?
+        // 4) MATCH OVER ?
         // -------------------------------
+        dto.gameOver = st.isGameOver();
         dto.winner = null;
 
-        if (dto.gameOver && !st.allPlayers().isEmpty()) {
+        if (dto.gameOver && st.getMatchWinnerId() != null) {
+            String winnerId = st.getMatchWinnerId();
+
             Player winner = st.allPlayers()
                     .stream()
-                    .max(Comparator.comparingInt(Player::score))
+                    .filter(p -> p.id().equals(winnerId))
+                    .findFirst()
                     .orElse(null);
 
             if (winner != null) {
                 dto.winner = winner.name();
+            } else {
+                // fallback : max au score
+                winner = st.allPlayers()
+                        .stream()
+                        .max(Comparator.comparingInt(Player::score))
+                        .orElse(null);
+                if (winner != null) {
+                    dto.winner = winner.name();
+                }
             }
         }
 
         return dto;
-    }
-
-    /**
-     * locked = true si :
-     *  - c'est la racine et rootLocked = true
-     *  - OU la carte n'est pas jouable
-     */
-    private static boolean computeLocked(TreeNode<Card> node, GameState st, boolean playable) {
-        if (node.depth() == 0 && st.rootLocked()) {
-            return true;
-        }
-        return !playable;
     }
 }

@@ -83,7 +83,7 @@ public class GameService {
         TreeNode<Card> node = nodeOpt.get();
         boolean childrenCollected = !node.children().isEmpty();
 
-        if (!engine.isPlayable(st, node, childrenCollected)) {
+        if (!engine.isPlayable(st, node,false)) {
             return new PlayResult(409, "Illegal move", null);
         }
 

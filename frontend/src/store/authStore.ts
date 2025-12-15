@@ -1,13 +1,12 @@
 import { create } from "zustand";
 
-export interface User {
+
+interface User {
   id: string;
+  handle: string;
   email: string;
-  handle: string;   // 🔥 ajoute ça
-  roles?: string[];
+  role: string; // 🔥 ajouté
 }
-
-
 
 interface AuthState {
   user: User | null;

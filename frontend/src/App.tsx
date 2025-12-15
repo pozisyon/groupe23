@@ -11,6 +11,11 @@ import { useAuthStore } from "./store/authStore";
 import { GameProvider } from "./context/GameContext";
 import { ChatProvider } from "./context/ChatContext";
 
+import AdminDashboard from "./pages/admin/AdminDashboard";
+import AdminGameDetail from "./pages/admin/AdminGameDetail";
+import AdminLogin from "./pages/admin/AdminLogin";
+
+
 function ProtectedRoute({ children }: { children: React.ReactElement }) {
   const token = useAuthStore(s => s.token);
   if (!token) return <Navigate to="/login" replace />;
@@ -36,6 +41,50 @@ export default function App({ dark, onToggleDark }: { dark: boolean; onToggleDar
               <Route path="/game" element={<ProtectedRoute><GamePage /></ProtectedRoute>} />
               <Route path="/game/:id" element={<ProtectedRoute><GamePage /></ProtectedRoute>} />
               <Route path="*" element={<Navigate to="/" replace />} />
+
+             <Route
+               path="/admin"
+               element={
+
+                     <AdminDashboard />
+
+
+               }
+             />
+
+             <Route path="/admin/login" element={<AdminLogin />} />
+
+             <Route
+               path="/admin/*"
+               element={
+
+                  <AdminDashboard />
+
+               }
+             />
+
+
+             <Route
+               path="/admin"
+               element={
+
+
+                     <AdminDashboard />
+
+
+               }
+             />
+
+
+              <Route path="/admin/games/:id" element={
+
+                  <AdminGameDetail />
+
+
+                             } />
+                 {/* Optionnel : page de création dédiée */}
+                {/* <Route path="/admin/games/new" element={<AdminGameCreatePage />} /> */}
+
             </Routes>
           </main>
         </ChatProvider>

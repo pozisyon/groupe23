@@ -24,8 +24,14 @@ export interface GameDTO {
   players: PlayerDTO[];
   maxDepth: number;
   board: CardDTO[][];
-}
 
+
+  // 🆕 BEST OF 3
+  round: number; // 1, 2, 3
+  roundsWon: Record<string, number>;
+  matchOver: boolean;
+  matchWinner: string | null;
+}
 
 
 

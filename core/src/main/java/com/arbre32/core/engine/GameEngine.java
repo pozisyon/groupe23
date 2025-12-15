@@ -15,6 +15,9 @@ import java.util.*;
 
 /**
  * Moteur du jeu Arbre32 (version joueurs dynamiques).
+ * Basé sur ta V1, avec ajout :
+ *  - garde-fou si gameOver
+ *  - gestion best-of-3 (manches)
  */
 public class GameEngine {
 
@@ -176,6 +179,11 @@ public class GameEngine {
      */
     public MoveResult applyMove(GameState st, Move move) {
 
+        // 🔥 Match déjà terminé → on ignore le coup
+        if (st.isGameOver()) {
+            return new MoveResult(null, List.of(), 0);
+        }
+
         Player player = st.getPlayer(move.playerId());
         if (player == null) {
             return new MoveResult(null, List.of(), 0);
@@ -242,10 +250,55 @@ public class GameEngine {
         st.advanceTurn();
         st.incrementTurnIndex();
 
-// 🔥 Si le jeu est terminé : plus jamais de "c'est votre tour"
+        // ----------- FIN DE MANCHE / MATCH (BEST-OF-3) -------------
         if (!hasAnyPlayableMove(st)) {
-            st.setGameOver(true);
+            // Fin de la manche
+            Player roundWinner = st.allPlayers()
+                    .stream()
+                    .max(Comparator.comparingInt(Player::score))
+                    .orElse(null);
+
+            if (roundWinner != null) {
+                st.addRoundWin(roundWinner.id());
+            }
+
+            int wins = roundWinner != null ? st.getRoundsWonFor(roundWinner.id()) : 0;
+
+            // Victoire du match si :
+            //  - un joueur a 2 manches gagnées
+            //  - ou on vient de finir la 3ème manche
+            if (wins >= 2 || st.getRound() >= 3) {
+                // Match terminé
+                st.setGameOver(true);
+                if (roundWinner != null) {
+                    st.setMatchWinnerId(roundWinner.id());
+                }
+            } else {
+                // Nouvelle manche
+                st.incrementRound();
+
+                // On repart avec un nouveau deck de 32 cartes (Arbre32)
+                List<Card> deck = DeckFactory.build32();
+                TreeNode<Card> root = new TreeNode<>(deck.remove(0));
+                Queue<TreeNode<Card>> q = new ArrayDeque<>();
+                q.add(root);
+
+                while (!deck.isEmpty()) {
+                    TreeNode<Card> parent = q.peek();
+                    int children = 1 + rnd.nextInt(2);
+                    for (int i = 0; i < children && !deck.isEmpty(); i++) {
+                        TreeNode<Card> child = new TreeNode<>(deck.remove(0));
+                        parent.addChild(child);
+                        q.add(child);
+                    }
+                    q.remove();
+                }
+
+                // Reset de l'état pour la nouvelle manche
+                st.resetForNewRound(root);
+            }
         }
+
         // ----------- Retour du résultat -------------
         return new MoveResult(
                 node.value(),   // carte jouée
@@ -277,5 +330,4 @@ public class GameEngine {
             return pointsGained;
         }
     }
-
 }

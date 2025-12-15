@@ -31,6 +31,7 @@ public class SecurityConfig {
                                 "/api/chat/**",
                                 "/api/game/**",
                                 "/api/games",
+                                "/api/admin/**",
                                 "/",           // index
                                 "/index.html",
                                 "/assets/**",

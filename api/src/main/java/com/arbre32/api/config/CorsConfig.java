@@ -24,7 +24,9 @@ public class CorsConfig {
                         .allowedHeaders("*")
                         .allowCredentials(true) // pour envoyer le Token si besoin
                         .maxAge(3600);
+
             }
         };
+
     }
 }

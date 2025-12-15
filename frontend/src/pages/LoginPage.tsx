@@ -18,7 +18,19 @@ export default function LoginPage() {
     try {
       const res = await AuthApi.login({ email, password });
       login(res.user, res.token);
-      navigate("/lobby");
+       // enregistrer
+            //setAuth(user, token);
+
+               // 🔥 redirection correcte selon le rôle
+               if (res.user.role === "ADMIN") {
+                 navigate("/admin");
+               } else {
+                 navigate("/lobby");
+               }
+           console.log("LOGIN RESPONSE =", res);
+           console.log("ROLE =", res.user.role);
+
+      //navigate("/lobby");
     } catch (err: any) {
       console.error(err);
       setError("Identifiants invalides ou erreur serveur.");
