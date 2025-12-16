@@ -1,9 +1,9 @@
 
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/arbre32
-    username: postgres
-    password: 1221Studi@
+    url: jdbc:postgresql://database:5432/arbre32
+    username: arbre32_uer
+    password: arbre32_pass
   jpa:
     hibernate:
       ddl-auto: update

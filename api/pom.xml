@@ -126,7 +126,7 @@
 
 
             <!-- Build react frontend before packaging -->
-            <plugin>
+           <!-- <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-antrun-plugin</artifactId>
                 <version>3.1.0</version>
@@ -140,12 +140,12 @@
                             <target>
                                 <echo message="🟦 Building React frontend..." />
 
-                                <!-- npm install -->
+                                < npm install
                                <exec executable="npm" dir="../frontend">
                                     <arg value="install"/>
                                 </exec>
 
-                                <!-- npm run build -->
+                                < npm run build
                                  <exec executable="npm" dir="../frontend">
                                     <arg value="run"/>
                                     <arg value="build"/>
@@ -168,7 +168,7 @@
                         </configuration>
                     </execution>
                 </executions>
-            </plugin>
+            </plugin>-->
 
         </plugins>
     </build>
