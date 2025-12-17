@@ -9,7 +9,9 @@ Reproductibilité
 
 Séparation claire des responsabilités
 
-Déploiement simplifié
+## DEPLOIMENT
+
+![Architecture Arbre32](docs/diagramms/deploiement.png)
 
 Stack utilisé
 Composant	Technologie
@@ -36,8 +38,8 @@ docker compose version
 
 3. Installation et lancement de l’application
    3.1 Récupération du projet
-   git clone https://github.com/<votre-repo>/arbre32.git
-   cd arbre32
+   git clone https://github.com/pozisyon/groupe23.git
+   cd groupe23
 
 3.2 Lancement du stack Docker
 
@@ -65,8 +67,24 @@ API REST	http://localhost:8080
 
 WebSocket	ws://localhost:8080/ws
 PostgreSQL	localhost:5432
+
+## Architecture globale
+
+![Architecture Arbre32](docs/diagramms/architectureGlobaleap.png)
+
+
+## Diagramme de classe
+![Architecture Arbre32](docs/diagramms/diagrammeDeClasse.png)
+
+
+## LIENS DES EVENT FRONTEND A BACKEND
+
+![Architecture Arbre32](docs/diagramms/liens_frontend_backend.png)
+
+
 4. Utilisation de l’application (Utilisateur)
-   4.1 Création d’un compte
+## CREER UNE PARTIE
+![Architecture Arbre32](docs/diagramms/sequenceCreerPartie.png)
 
 Accéder à l’interface web
 
@@ -94,6 +112,9 @@ vers le Lobby (utilisateur normal)
 
 ou vers le Dashboard Admin (administrateur)
 
+## CREER UNE PARTIE
+![Architecture Arbre32](docs/diagramms/sequenceCreerPartie.png)
+
 4.3 Rejoindre une partie
 
 Depuis le lobby :
@@ -104,7 +125,9 @@ Rejoindre une partie existante
 
 Attendre un adversaire
 
-4.4 Jouer une partie
+4.Jouer une partie
+## JOUER UN TOUR
+![Architecture Arbre32](docs/diagramms/sequenceJouerTour.png)
 
 Le plateau affiche l’arbre de cartes
 
@@ -133,27 +156,64 @@ Un compte avec rôle ADMIN est redirigé automatiquement vers :
 
 /admin
 
-5.2 Fonctionnalités du Dashboard Admin
 
-L’administrateur peut :
+6. Patterns de conception utilisés (GoF)
 
- Lister toutes les parties
+## PATRON CE CONCEPTION
+![Architecture Arbre32](docs/diagramms/patternGof.png)
 
-▶️Voir les parties actives
 
-⛔Forcer la fin d’une partie
+6.1 Factory Pattern
 
- Passer à la manche suivante (BO3)
+Utilisation :
 
-♻ Réinitialiser une partie
+Création des cartes
 
-Supprimer une partie
+Création des nœuds de l’arbre
 
-Ces actions utilisent les endpoints :
+Avantage :
 
-/api/admin/games/**
+Centralise la logique de création
 
-6. Arrêt de l’application
+Facilite l’extension du jeu
+
+public interface CardFactory {
+Card createCard(CardType type);
+}
+
+6.2 Strategy Pattern
+
+Utilisation :
+
+Calcul des scores
+
+Règles de jeu variables
+
+Avantage :
+
+Permet de changer les règles sans modifier le cœur du jeu
+
+public interface ScoreStrategy {
+int computeScore(GameState state);
+}
+
+6.3 Facade Pattern
+
+Utilisation :
+
+Accès simplifié aux fonctionnalités complexes du moteur de jeu
+
+Avantage :
+
+Réduit le couplage
+
+Simplifie l’utilisation côté contrôleurs
+
+public class GameFacade {
+public void playTurn(...) { }
+}
+
+7. Arrêt de l’application
 
 Pour arrêter proprement le stack :
 
@@ -191,3 +251,26 @@ Un déploiement fiable
 Une architecture professionnelle
 
 Une conformité avec les bonnes pratiques DevOps
+
+## CPATURES D'ECRAN
+![Architecture Arbre32](docs/screenshots/capture1.png)
+## CPATURES D'ECRAN
+![Architecture Arbre32](docs/screenshots/capture2.png)
+## CPATURES D'ECRAN
+![Architecture Arbre32](docs/screenshots/capture3.png)
+## CPATURES D'ECRAN
+![Architecture Arbre32](docs/screenshots/capture3.png)
+## CPATURES D'ECRAN
+![Architecture Arbre32](docs/screenshots/capture4.png)
+## CPATURES D'ECRAN
+![Architecture Arbre32](docs/screenshots/capture5.png)
+## CPATURES D'ECRAN
+![Architecture Arbre32](docs/screenshots/capture6.png)
+## CPATURES D'ECRAN
+![Architecture Arbre32](docs/screenshots/capture7.png)
+## CPATURES D'ECRAN
+![Architecture Arbre32](docs/screenshots/capture8.png)
+## CPATURES D'ECRAN
+![Architecture Arbre32](docs/screenshots/capture9.png)
+## CPATURES D'ECRAN
+![Architecture Arbre32](docs/screenshots/capture10.png)
