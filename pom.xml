@@ -20,10 +20,21 @@
         <!-- version à confirmer -->
     </parent>
     <properties>
+        <!-- Java -->
         <java.version>17</java.version>
+
+        <!-- Encoding -->
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <spring.boot.version>3.3.3</spring.boot.version>
-        <junit.jupiter.version>5.10.0</junit.jupiter.version>
-        <lombok.version>1.18.32</lombok.version>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+
+        <!-- Spring Boot -->
+        <spring.boot.version>3.5.6</spring.boot.version>
+
+        <!-- Tests -->
+        <junit.jupiter.version>5.12.2</junit.jupiter.version>
+
+        <!-- Lombok -->
+        <lombok.version>1.18.36</lombok.version>
     </properties>
+
 </project>
