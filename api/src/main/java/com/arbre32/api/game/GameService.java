@@ -59,7 +59,33 @@ public class GameService {
     }
 
     // ---------- RÉSULTAT DE PLAY ----------
-    public record PlayResult(int status, String message, GameStateDTO state) { }
+    public record PlayResult(int status, String message, GameStateDTO state) {
+
+
+        // ✅ SUCCESS
+        public static PlayResult ok(GameStateDTO state) {
+            return new PlayResult(200, null, state);
+        }
+
+        // ✅ ERROR (celle qui te manque)
+        public static PlayResult error(int status, String message) {
+            return new PlayResult(status, message, null);
+        }
+
+        public int status() {
+            return status;
+        }
+
+        public String message() {
+            return message;
+        }
+
+        public GameStateDTO state() {
+            return state;
+        }
+
+
+    }
 
     // ---------- JOUER UN COUP ----------
     public PlayResult play(String id, String cardId, String userHandle) {

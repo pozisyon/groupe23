@@ -20,10 +20,10 @@ com/arbre32/api/game/GameController$JoinRequest.class
 com/arbre32/api/user/PlayerAccountRepository.class
 com/arbre32/api/user/dto/RegisterRequest.class
 com/arbre32/api/user/AuthController.class
+com/arbre32/api/game/dto/ModeRequest.class
 com/arbre32/api/user/dto/AuthResponse.class
 com/arbre32/api/game/GameController.class
 com/arbre32/api/user/dto/UserDto.class
-ModeRequest.class
 com/arbre32/api/config/CorsConfig$1.class
 com/arbre32/api/lobby/LobbyController.class
 com/arbre32/api/user/PlayerAccount.class
