@@ -32,8 +32,8 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://database:5432/arbre32
       SPRING_DATASOURCE_USERNAME: arbre_user
       SPRING_DATASOURCE_PASSWORD: arbre_pass
-    expose:
-      - "8080"
+    ports:
+      - "8080:8080"
     networks:
       - arbre32-net
 
