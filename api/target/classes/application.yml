@@ -18,3 +18,18 @@ security:
   jwt:
     secret: "THIS_IS_A_DEV_SECRET_CHANGE_IT_IN_PRODUCTION_1234567890"
     expMinutes: 120
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+  endpoint:
+    health:
+      show-details: always
+
+server:
+  port: 8080
+  address: 0.0.0.0
+
+
