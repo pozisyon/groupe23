@@ -18,7 +18,10 @@ import java.util.UUID;
 public class JwtAuthFilter extends OncePerRequestFilter {
   private final JwtService jwt; private final PlayerAccountRepository repo;
   public JwtAuthFilter(JwtService j, PlayerAccountRepository r){ this.jwt=j; this.repo=r; }
-  @Override protected void doFilterInternal(HttpServletRequest req, HttpServletResponse res, FilterChain chain)
+
+
+  @Override
+  protected void doFilterInternal(HttpServletRequest req, HttpServletResponse res, FilterChain chain)
       throws ServletException, IOException {
     String h = req.getHeader("Authorization");
     if(h!=null && h.startsWith("Bearer ")){
@@ -37,4 +40,11 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     }
     chain.doFilter(req, res);
   }
+
+  @Override
+  protected boolean shouldNotFilter(HttpServletRequest request) {
+    String path = request.getRequestURI();
+    return path.startsWith("/actuator/");
+  }
+
 }
